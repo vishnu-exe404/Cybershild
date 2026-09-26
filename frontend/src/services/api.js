@@ -1,46 +1,49 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-async function handleResponse(res) {
+async function request(path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: 'include', // send/receive the httpOnly session cookie
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Something went wrong. Please try again.');
+    const err = new Error(data.error || 'Something went wrong. Please try again.');
+    err.fieldErrors = data.fieldErrors;
+    err.status = res.status;
+    throw err;
   }
   return data;
 }
 
-/**
- * Sends the pasted text to the backend risk engine.
- * @param {string} text
- */
-export async function analyzeMessage(text) {
-  const res = await fetch(`${API_BASE_URL}/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  return handleResponse(res);
-}
+// --- Risk analysis ---
+export const analyzeMessage = (text) => request('/analyze', { method: 'POST', body: JSON.stringify({ text }) });
 
-/** Logs in and returns { token, username }. */
-export async function loginRequest(username, password) {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  return handleResponse(res);
-}
+// --- User auth ---
+export const registerRequest = (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) });
+export const loginRequest = (identifier, password) =>
+  request('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
+export const logoutRequest = () => request('/auth/logout', { method: 'POST' });
+export const meRequest = () => request('/auth/me');
+export const completeOnboardingRequest = () => request('/auth/onboarding/complete', { method: 'POST' });
 
-/** Fetches aggregated analytics for the dashboard. Requires a login token. */
-export async function getAnalytics(token) {
-  const res = await fetch(`${API_BASE_URL}/analytics`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  return handleResponse(res);
-}
+// --- User history ---
+export const getMyHistory = () => request('/history');
 
-/** Simple backend health check. */
-export async function checkHealth() {
-  const res = await fetch(`${API_BASE_URL}/health`);
-  return handleResponse(res);
-}
+// --- Admin auth ---
+export const adminLoginRequest = (username, password) =>
+  request('/admin/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+export const adminLogoutRequest = () => request('/admin/auth/logout', { method: 'POST' });
+export const adminMeRequest = () => request('/admin/auth/me');
+
+// --- Admin: user management + stats ---
+export const getAdminStats = () => request('/admin/stats');
+export const listUsersRequest = (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  return request(`/admin/users${qs ? `?${qs}` : ''}`);
+};
+export const updateUserRequest = (id, payload) =>
+  request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const deleteUserRequest = (id) => request(`/admin/users/${id}`, { method: 'DELETE' });
+
+export const checkHealth = () => request('/health');

@@ -30,8 +30,11 @@ async function analyze(req, res, next) {
     const result = riskEngine.analyzeText(text);
     const inputType = detectInputType(text);
 
-    // Persist only aggregated, non-sensitive fields for analytics.
+    // Persist only aggregated, non-sensitive fields. If the visitor is
+    // logged in (req.userId set by attachUserIfPresent), the record is
+    // linked to their account so it shows up in their history.
     await analysisModel.saveAnalysis({
+      userId: req.userId || null,
       riskScore: result.riskScore,
       riskLevel: result.riskLevel,
       detectedThreats: result.detectedThreats,
@@ -45,7 +48,7 @@ async function analyze(req, res, next) {
       reasons: result.reasons,
       recommendations: result.recommendations,
       disclaimer:
-        'This is an automated risk assessment, not a guarantee. It does not provide perfect detection — always use your own judgement and verify through official channels.',
+        'This is an automated risk assessment, not a guarantee. It does not provide perfect detection - always use your own judgement and verify through official channels.',
     });
   } catch (err) {
     next(err);

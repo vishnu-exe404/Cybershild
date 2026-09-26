@@ -1,0 +1,60 @@
+// Prisma schema for the Cyber Security Awareness Platform.
+// Provider is PostgreSQL - point DATABASE_URL at any hosted Postgres
+// (Neon, Supabase, Render, RDS, etc). Run `npm run prisma:migrate:dev`
+// locally against a real database to create these tables, or
+// `npm run prisma:migrate` in production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Regular application users (register/login at /register and /login).
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  hasOnboarded Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  analyses AnalysisRecord[]
+
+  @@map("users")
+}
+
+/// Admin accounts are a fully separate table/auth system from regular
+/// users - never share credentials or a login page with User.
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+/// One row per message/link analysis. userId is nullable so the free
+/// checker still works for anonymous, logged-out visitors; only signed-in
+/// users build up a saved history.
+model AnalysisRecord {
+  id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  inputType       String
+  riskScore       Int
+  riskLevel       String
+  detectedThreats Json
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("analysis_records")
+}

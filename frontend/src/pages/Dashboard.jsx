@@ -1,98 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import { useLanguage } from '../services/i18n.jsx';
-import { useAuth } from '../services/auth.jsx';
-import { getAnalytics } from '../services/api.js';
+import { useNavigate } from 'react-router-dom';
+import { getAdminStats } from '../services/api.js';
+import { useAdminAuth } from '../services/adminAuth.jsx';
+import { useToast } from '../services/toast.jsx';
+import { SkeletonCard } from '../components/Skeleton.jsx';
+import AdminUsersTable from '../components/AdminUsersTable.jsx';
 
 export default function Dashboard() {
-  const { t } = useLanguage();
-  const { token } = useAuth();
+  const { admin, logout } = useAdminAuth();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    getAnalytics(token)
-      .then((res) => {
-        if (!cancelled) setData(res);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
+    getAdminStats()
+      .then(setData)
+      .catch((err) => setError(err.message));
+  }, []);
 
-  if (loading) return <p className="dashboard-status">{t('dashboard.loading')}</p>;
-  if (error) return <p className="dashboard-status dashboard-status--error">{error}</p>;
-  if (!data || data.totalChecks === 0) {
-    return (
-      <section className="dashboard-page">
-        <h1>{t('dashboard.title')}</h1>
-        <p className="dashboard-status">{t('dashboard.empty')}</p>
-      </section>
-    );
+  async function handleLogout() {
+    await logout();
+    showToast('Logged out.', 'info');
+    navigate('/admin/login');
   }
 
-  const maxOverTime = Math.max(...data.checksOverTime.map((d) => d.count), 1);
-  const maxThreat = Math.max(...data.topThreats.map((d) => d.count), 1);
-
   return (
-    <section className="dashboard-page">
-      <h1>{t('dashboard.title')}</h1>
-
-      <div className="stat-grid">
-        <div className="stat-card">
-          <p className="stat-value">{data.totalChecks}</p>
-          <p className="stat-label">{t('dashboard.totalChecks')}</p>
+    <section className="fade-in">
+      <div className="dashboard-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p className="muted">Signed in as {admin?.username}</p>
         </div>
-        <div className="stat-card stat-card--safe">
-          <p className="stat-value">{data.safeCount}</p>
-          <p className="stat-label">{t('dashboard.safe')}</p>
-        </div>
-        <div className="stat-card stat-card--caution">
-          <p className="stat-value">{data.cautionCount}</p>
-          <p className="stat-label">{t('dashboard.caution')}</p>
-        </div>
-        <div className="stat-card stat-card--high">
-          <p className="stat-value">{data.highRiskCount}</p>
-          <p className="stat-label">{t('dashboard.highRisk')}</p>
-        </div>
+        <button className="btn-outline" onClick={handleLogout}>Log out</button>
       </div>
 
-      <div className="dashboard-section">
-        <h2>{t('dashboard.topThreats')}</h2>
-        <div className="bar-chart">
-          {data.topThreats.map((item) => (
-            <div className="bar-row" key={item.label}>
-              <span className="bar-label">{item.label}</span>
-              <div className="bar-track">
-                <div className="bar-fill" style={{ width: `${(item.count / maxThreat) * 100}%` }} />
+      {error && <p className="field-error">{error}</p>}
+
+      {!data && !error && (
+        <div className="stat-grid">
+          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+        </div>
+      )}
+
+      {data && (
+        <div className="stat-grid">
+          <div className="stat-card glass-card"><b>{data.totalUsers}</b><span className="muted">Registered Users</span></div>
+          <div className="stat-card glass-card"><b>{data.totalChecks}</b><span className="muted">Total Checks</span></div>
+          <div className="stat-card glass-card stat-safe"><b>{data.safeCount}</b><span className="muted">Safe</span></div>
+          <div className="stat-card glass-card stat-caution"><b>{data.cautionCount}</b><span className="muted">Caution</span></div>
+          <div className="stat-card glass-card stat-high"><b>{data.highRiskCount}</b><span className="muted">High Risk</span></div>
+        </div>
+      )}
+
+      {data && data.topThreats.length > 0 && (
+        <div className="card">
+          <h3>Most Frequently Detected Threats</h3>
+          <div className="bar-chart">
+            {data.topThreats.map((t) => (
+              <div className="bar-row" key={t.label}>
+                <span className="bar-label">{t.label}</span>
+                <div className="bar-track"><div className="bar-fill" style={{ width: `${(t.count / data.topThreats[0].count) * 100}%` }} /></div>
+                <span className="bar-count">{t.count}</span>
               </div>
-              <span className="bar-count">{item.count}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="dashboard-section">
-        <h2>{t('dashboard.overTime')}</h2>
-        <div className="line-chart" role="img" aria-label={t('dashboard.overTime')}>
-          {data.checksOverTime.map((item) => (
-            <div
-              key={item.date}
-              className="line-chart-bar"
-              title={`${item.date}: ${item.count}`}
-              style={{ height: `${(item.count / maxOverTime) * 100}%` }}
-            />
-          ))}
-        </div>
-      </div>
+      <AdminUsersTable />
     </section>
   );
 }

@@ -1,32 +1,25 @@
-const crypto = require('crypto');
-const db = require('../config/database');
+const prisma = require('../config/prisma');
 
-/**
- * Persists a completed analysis result for analytics purposes.
- *
- * Security note: per the project requirements, we do NOT store the raw
- * submitted message/URL. We only keep a one-way hash (for potential future
- * duplicate-detection features) plus the non-sensitive result fields needed
- * to power the aggregated analytics dashboard.
- */
-async function saveAnalysis({ riskScore, riskLevel, detectedThreats, inputType }) {
-  const record = {
-    id: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
-    inputHash: null, // set by caller if hashing is desired; left null by default
-    inputType, // 'sms' | 'email' | 'message' | 'url'
-    riskScore,
-    riskLevel,
-    detectedThreats,
-  };
-  return db.insert(record);
+async function saveAnalysis({ userId, riskScore, riskLevel, detectedThreats, inputType }) {
+  return prisma.analysisRecord.create({
+    data: { userId: userId || null, riskScore, riskLevel, detectedThreats, inputType },
+  });
 }
 
 async function getAllAnalyses() {
-  return db.getAll();
+  return prisma.analysisRecord.findMany({ orderBy: { createdAt: 'asc' } });
 }
 
-module.exports = {
-  saveAnalysis,
-  getAllAnalyses,
-};
+async function getHistoryForUser(userId, { limit = 50 } = {}) {
+  return prisma.analysisRecord.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+}
+
+async function countAnalyses() {
+  return prisma.analysisRecord.count();
+}
+
+module.exports = { saveAnalysis, getAllAnalyses, getHistoryForUser, countAnalyses };

@@ -1,117 +1,155 @@
 # Cyber Security Awareness Platform
 
-A free, simple web app where anyone can paste a suspicious SMS, email, message, or URL
-and get an instant, plain-language risk assessment — designed to be usable by elderly
-users, students, first-time smartphone users, and rural users.
+A free web app where anyone can paste a suspicious SMS, email, message, or link and get an
+instant, plain-language risk assessment. Now with real accounts, a separate admin system,
+and PostgreSQL-backed persistence.
 
-> "From a single pasted message to a clear, actionable verdict."
-
-## How it works
+## Architecture
 
 ```
-Frontend (React)
-     ↓  REST API
+Frontend (React + Vite)
+     ↓ REST API (cookies, credentials included)
 Backend (Express)
      ↓
-Risk Engine
-     ↓
-Detection Modules (phishing, URLs, OTP, urgency, India-specific scams...)
-     ↓
-Risk Score (0-100) + Risk Level (SAFE / CAUTION / HIGH_RISK)
-     ↓
-API Response → Frontend Result
+Risk Engine (unchanged) ──► Detection Modules ──► Risk Score
+     │
+     ├─ User auth (register/login/logout, httpOnly cookie, bcrypt + JWT)
+     ├─ Admin auth (fully separate table/secret/cookie from users)
+     └─ Prisma ORM ──► PostgreSQL (users, admins, analysis_records)
 ```
 
-The frontend never contains detection logic — all analysis happens on the backend so
-detection rules can be updated without touching the UI.
-
-## Project structure
-
-```
-cyber-security-awareness-platform/
-├── frontend/   React + Vite app
-├── backend/    Express REST API + modular risk engine
-├── README.md
-└── .gitignore
-```
+- **Two independent auth systems.** Regular users and admins live in separate database
+  tables, are signed with separate secrets (`AUTH_SECRET` vs `ADMIN_AUTH_SECRET`), and use
+  separate cookies (`csap_session` vs `csap_admin_session`). A user token can never be used
+  against an admin route or vice versa.
+- **Server-side authorization everywhere.** Every admin route (`/api/admin/*`) is guarded by
+  `requireAdmin` middleware on the backend - the frontend's `AdminProtectedRoute` is a UX
+  convenience, not the actual security boundary.
+- **Passwords are bcrypt-hashed** (cost factor 12) before they ever touch the database.
+  Plaintext passwords are never logged or stored.
+- **The message-analysis tool stays public** (per the platform's "free, accessible" purpose).
+  If you're logged in, your checks are additionally saved to your account so they show up on
+  `/history`. Logged-out visitors can still use it; nothing is saved for them beyond the same
+  anonymized aggregate stats as before.
 
 ## Getting started
 
-### Backend
+### 1. Database
+
+You need a real PostgreSQL database (a free one from [Neon](https://neon.tech),
+[Supabase](https://supabase.com), or [Render](https://render.com) all work fine for
+development).
 
 ```bash
 cd backend
 cp .env.example .env
+```
+
+Edit `.env` and fill in:
+```
+DATABASE_URL=postgresql://user:password@host:5432/csap?schema=public
+AUTH_SECRET=<a long random string>
+ADMIN_AUTH_SECRET=<a different long random string>
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=<pick something real>
+```
+
+### 2. Install, migrate, seed
+
+```bash
 npm install
+npm run prisma:migrate      # creates the users / admins / analysis_records tables
+npm run prisma:seed         # creates the admin account from ADMIN_USERNAME/ADMIN_PASSWORD
 npm run dev
 ```
 
-The API runs at `http://localhost:5000` by default.
+The API runs at `http://localhost:5000`.
 
-- `GET /api/health` — health check
-- `POST /api/analyze` — body `{ "text": "..." }` → risk assessment
-- `POST /api/auth/login` — body `{ "username": "...", "password": "..." }` → JWT token
-- `GET /api/analytics` — aggregated usage statistics (requires `Authorization: Bearer <token>`)
-
-### Admin login
-
-The analytics dashboard is protected by a single admin account, seeded on first
-startup from `ADMIN_USERNAME` / `ADMIN_PASSWORD` in `backend/.env` (also set
-`JWT_SECRET` to a long random string). There is no public sign-up — this is an
-admin-only view, not a user-account system. Change the default credentials before
-deploying anywhere public. Visit `/login` in the frontend to sign in.
-
-### Frontend
+### 3. Frontend
 
 ```bash
 cd frontend
+cp .env.example .env   # VITE_API_BASE_URL, defaults to http://localhost:5000/api
 npm install
 npm run dev
 ```
 
-The app runs at `http://localhost:5173` and talks to the backend via
-`VITE_API_BASE_URL` (see `frontend/.env.example`).
+Runs at `http://localhost:5173`.
+
+## Using it
+
+- **Sign up / log in** at `/register` and `/login` — normal users.
+- **Admin** logs in separately at `/admin/login` (not linked from the main nav — there's a
+  small "Admin" link in the footer). This is a single bootstrapped admin account, not a
+  public sign-up.
+- **`/dashboard`** — admin-only: overview stats, top detected threats, and a searchable,
+  paginated user-management table (edit / delete, with a confirmation dialog before delete).
+- **`/history`** — logged-in users only: their own past checks.
+- **First login**: after a brand-new user's first successful login, a short onboarding modal
+  walks through the app; dismissing it sets `hasOnboarded = true` in the database, so it
+  won't show again on any device.
+
+## API reference
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/auth/register` | — | Create a user account |
+| POST | `/api/auth/login` | — | Log in (sets `csap_session` cookie) |
+| POST | `/api/auth/logout` | — | Clear session |
+| GET | `/api/auth/me` | user | Current user + `hasOnboarded` |
+| POST | `/api/auth/onboarding/complete` | user | Mark onboarding done |
+| GET | `/api/history` | user | The caller's own analysis history |
+| POST | `/api/analyze` | optional | Risk-check text; saved to history if logged in |
+| POST | `/api/admin/auth/login` | — | Admin login (sets `csap_admin_session` cookie) |
+| POST | `/api/admin/auth/logout` | admin | Clear admin session |
+| GET | `/api/admin/auth/me` | admin | Current admin |
+| GET | `/api/admin/users` | admin | `?search=&page=&pageSize=` |
+| PATCH | `/api/admin/users/:id` | admin | Edit a user |
+| DELETE | `/api/admin/users/:id` | admin | Delete a user |
+| GET | `/api/admin/stats` | admin | Dashboard overview stats |
+| GET | `/api/health` | — | Health check |
+
+## Environment variables
+
+**backend/.env**
+```
+PORT, NODE_ENV, CORS_ORIGIN
+RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS
+DATABASE_URL
+AUTH_SECRET, AUTH_SESSION_TTL
+ADMIN_AUTH_SECRET, ADMIN_SESSION_TTL
+ADMIN_USERNAME, ADMIN_PASSWORD   (consumed once by the seed script)
+```
+
+**frontend/.env**
+```
+VITE_API_BASE_URL
+```
+
+No secret ever appears in frontend code - the frontend only ever calls the backend and
+relies on httpOnly cookies it can't read or tamper with.
+
+## Database schema (Prisma)
+
+- `users` — id, name, email (unique), username (unique), passwordHash, hasOnboarded, timestamps
+- `admins` — id, username (unique), passwordHash, timestamps — completely separate table
+- `analysis_records` — id, userId (nullable FK → users), inputType, riskScore, riskLevel,
+  detectedThreats (JSON), createdAt
+
+See `backend/prisma/schema.prisma` for the full definitions and
+`backend/prisma/migrations/20260101000000_init/migration.sql` for the SQL.
+
+## What I could not verify in this environment
+
+I don't have network access in this sandbox, so I could not run `npm install`, `npx prisma
+migrate`, or actually boot the server/database here. Everything above was hand-written and
+statically checked (`node -c` on every backend file, brace/paren balance checks on the
+frontend), but you'll need to run the install/migrate/start steps yourself and confirm the
+end-to-end flows (register → login → onboarding → analyze → history; admin login → dashboard
+→ edit/delete user) actually work against a real database. If anything errors out, send me
+the exact message and I'll fix it.
 
 ## Extending detection
 
-Each scam category lives in its own file under `backend/rules/`:
-
-```
-rules/
-  phishingRules.js
-  digitalArrestRules.js
-  courierScamRules.js
-  maliciousAppRules.js
-  otpRules.js
-  urgencyRules.js
-```
-
-To add a new pattern: add an entry to the relevant file's `RULES` array (or create a
-new rules file and wire it into `backend/services/scamPatternDetector.js`). No other
-file needs to change.
-
-## Multi-language support
-
-UI strings live in `frontend/src/locales/*.json` (starting with English and Hindi).
-Add a new language by creating another locale file and registering it in
-`frontend/src/services/i18n.js` — no component code needs to change.
-
-## Important notes
-
-- This tool provides a **risk assessment**, not a guarantee. It does not claim
-  perfect detection.
-- The analytics dashboard only stores aggregated, non-sensitive statistics
-  (risk score, risk level, detected threat categories). Raw pasted messages are
-  **never** stored.
-- URLs are inspected as text only — the app never visits or executes a submitted
-  link.
-- Helpline/report links point to genuine official resources (e.g. cybercrime.gov.in,
-  1930), not invented numbers.
-
-## Deployment
-
-- **Frontend**: deployable to Vercel as a static Vite build (`npm run build` → `dist/`).
-- **Backend**: deployable to Vercel serverless functions, Render, or any Node host.
-- **Database**: starts with a local JSON file (`backend/data/store.json`) behind a
-  swappable driver in `backend/config/database.js` — point `DB_DRIVER` at a hosted
-  database driver later without touching the rest of the app.
+Detection rules are unchanged from before - see `backend/rules/*.js`. Add a new pattern by
+adding an entry to the relevant file's `RULES` array.

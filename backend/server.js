@@ -2,15 +2,16 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
 const analysisRoutes = require('./routes/analysisRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
 const authRoutes = require('./routes/authRoutes');
-const requireAuth = require('./middleware/authMiddleware');
+const adminAuthRoutes = require('./routes/adminAuthRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 const errorHandler = require('./middleware/errorHandler');
-const db = require('./config/database');
-const userModel = require('./models/userModel');
+const prisma = require('./config/prisma');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,53 +24,71 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests (no origin) and configured origins only.
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },
+    credentials: true, // required so the browser sends/receives session cookies
   })
 );
 
-app.use(express.json({ limit: '100kb' })); // small limit - this app only accepts short pasted text
+app.use(express.json({ limit: '100kb' }));
+app.use(cookieParser());
 
 const limiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60_000,
-  max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 30,
+  max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 60,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    error: 'Too many requests. Please wait a moment before trying again.',
-  },
+  message: { error: 'Too many requests. Please wait a moment before trying again.' },
 });
 app.use('/api/', limiter);
+
+// A stricter limiter on auth endpoints to slow down credential-guessing.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please wait a few minutes and try again.' },
+});
+app.use(['/api/auth/login', '/api/auth/register', '/api/admin/auth/login'], authLimiter);
 
 // --- Routes ---
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'csap-backend', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api/analyze', analysisRoutes);
-// The analytics dashboard requires login - see backend/middleware/authMiddleware.js
-app.use('/api/analytics', requireAuth, analyticsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/history', historyRoutes);
+app.use('/api/admin/auth', adminAuthRoutes);
+app.use('/api/admin', adminRoutes); // user management + /api/admin/stats, all requireAdmin-protected
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Centralized error handler (must be last)
 app.use(errorHandler);
 
 async function start() {
-  await db.init();
-  await userModel.ensureAdminSeed();
+  try {
+    await prisma.$connect();
+  } catch (err) {
+    console.error('[startup] Could not connect to the database. Check DATABASE_URL in your .env file.');
+    console.error(err.message);
+    process.exit(1);
+  }
+
   app.listen(PORT, () => {
     console.log(`CSAP backend listening on port ${PORT}`);
   });
 }
 
 start();
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
 
 module.exports = app;
