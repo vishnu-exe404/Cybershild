@@ -1,4 +1,4 @@
-# Cyber Security Awareness Platform
+# CyberShild
 
 A free web app where anyone can paste a suspicious SMS, email, message, or link and get an
 instant, plain-language risk assessment. Now with real accounts, a separate admin system,
@@ -32,6 +32,13 @@ Risk Engine (unchanged) ──► Detection Modules ──► Risk Score
   `/history`. Logged-out visitors can still use it; nothing is saved for them beyond the same
   anonymized aggregate stats as before.
 
+## Branding
+
+The logo is a hand-built SVG shield mark (`frontend/public/logo/cybershild-mark.svg`, also
+used as the favicon at `frontend/public/icons/favicon.svg`) — no external image/generation
+service involved. It's referenced in the header via a plain `<img>` tag, so swapping in a
+different mark later is just replacing that file.
+
 ## Getting started
 
 ### 1. Database
@@ -47,7 +54,7 @@ cp .env.example .env
 
 Edit `.env` and fill in:
 ```
-DATABASE_URL=postgresql://user:password@host:5432/csap?schema=public
+DATABASE_URL=postgresql://user:password@host:5432/cybershild?schema=public
 AUTH_SECRET=<a long random string>
 ADMIN_AUTH_SECRET=<a different long random string>
 ADMIN_USERNAME=admin

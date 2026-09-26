@@ -21,7 +21,7 @@ export default function Header() {
     <header className="header">
       <div className="header-inner">
         <Link to="/" className="brand">
-          <span className="brand-shield" aria-hidden="true">🛡️</span>
+          <img src="/logo/cybershild-mark.svg" alt="" className="brand-logo" width="28" height="28" aria-hidden="true" />
           <span className="brand-name">{t('appName')}</span>
         </Link>
 

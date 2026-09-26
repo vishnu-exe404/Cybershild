@@ -1,7 +1,7 @@
 {
-  "name": "csap-backend",
+  "name": "cybershild-backend",
   "version": "2.0.0",
-  "description": "Cyber Security Awareness Platform - Backend API (risk engine, auth, admin, database)",
+  "description": "CyberShild - Backend API (risk engine, auth, admin, database)",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

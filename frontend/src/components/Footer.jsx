@@ -9,7 +9,7 @@ export default function Footer() {
     <footer className="footer">
       <p>{t('footer.text')}</p>
       <p className="footer-meta">
-        Cyber Security Awareness Platform · Report cybercrime at{' '}
+        CyberShild · Report cybercrime at{' '}
         <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer">
           cybercrime.gov.in
         </a>{' '}

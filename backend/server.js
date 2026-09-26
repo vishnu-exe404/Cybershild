@@ -55,7 +55,7 @@ app.use(['/api/auth/login', '/api/auth/register', '/api/admin/auth/login'], auth
 
 // --- Routes ---
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'csap-backend', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'cybershild-backend', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/analyze', analysisRoutes);
@@ -80,7 +80,7 @@ async function start() {
   }
 
   app.listen(PORT, () => {
-    console.log(`CSAP backend listening on port ${PORT}`);
+    console.log(`CyberShild backend listening on port ${PORT}`);
   });
 }
 

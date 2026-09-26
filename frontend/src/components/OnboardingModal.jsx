@@ -3,7 +3,7 @@ import { useUserAuth } from '../services/userAuth.jsx';
 
 const SLIDES = [
   {
-    title: 'Welcome to the Cyber Security Awareness Platform',
+    title: 'Welcome to CyberShild',
     body: 'Paste any suspicious SMS, email, message, or link and get an instant, easy-to-understand risk check.',
   },
   {

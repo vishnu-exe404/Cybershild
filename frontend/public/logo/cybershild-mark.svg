@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" role="img" aria-label="CyberShild logo">
+  <defs>
+    <linearGradient id="csGrad" x1="0" y1="0" x2="200" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="0.5" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield body -->
+  <path d="M100,10
+           C130,10 165,25 165,25
+           L165,95
+           C165,155 135,190 100,210
+           C65,190 35,155 35,95
+           L35,25
+           C35,25 70,10 100,10
+           Z"
+        fill="url(#csGrad)"/>
+
+  <!-- Circuit-node accents at the shoulders (the "cyber" in CyberShild) -->
+  <line x1="55" y1="40" x2="78" y2="58" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+  <line x1="145" y1="40" x2="122" y2="58" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="55" cy="40" r="5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="145" cy="40" r="5" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Checkmark (the "shield" - verified / safe) -->
+  <path d="M65,108 L92,135 L140,82" fill="none" stroke="#ffffff" stroke-width="16"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

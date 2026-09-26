@@ -76,8 +76,9 @@ a {
   font-weight: 700;
   font-size: 1.05rem;
 }
-.brand-shield {
-  font-size: 1.4rem;
+.brand-logo {
+  display: block;
+  flex-shrink: 0;
 }
 .nav {
   display: flex;

@@ -8,7 +8,7 @@ export default function About() {
     <section className="about-page">
       <h1>{t('about.title')}</h1>
       <p>
-        The Cyber Security Awareness Platform is a free tool that helps anyone quickly check
+        CyberShild is a free tool that helps anyone quickly check
         whether a suspicious SMS, email, message, or link shows common scam warning signs —
         including phishing, OTP-sharing requests, urgency and fear tactics, and India-specific
         scams such as digital-arrest impersonation, courier/parcel scams, and malicious app
