@@ -19,8 +19,8 @@ export default function Results() {
   const { riskScore, riskLevel, detectedThreats, reasons, recommendations, disclaimer } = result;
 
   return (
-    <section className="results-page">
-      <div className="results-card">
+    <section className="results-page fade-in">
+      <div className="results-card glass-card card-in">
         <RiskScore score={riskScore} level={riskLevel} />
         <DetectionResults threats={detectedThreats} reasons={reasons} />
         <ActionGuidance recommendations={recommendations} riskLevel={riskLevel} />

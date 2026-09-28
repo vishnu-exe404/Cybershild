@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../services/adminAuth.jsx';
 import { useToast } from '../services/toast.jsx';
+import BlobField from '../components/BlobField.jsx';
+import { IconInput, PasswordInput } from '../components/FormField.jsx';
+import { IconUser, IconLock, IconShield } from '../components/icons.jsx';
 
 export default function AdminLogin() {
   const { login } = useAdminAuth();
@@ -13,12 +16,14 @@ export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!username.trim() || !password) {
       setError('Enter the admin username and password.');
+      setShake(true);
       return;
     }
     setError('');
@@ -29,32 +34,30 @@ export default function AdminLogin() {
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
+      setShake(true);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <section className="auth-page fade-in">
-      <form className="auth-card glass-card admin-login-card" onSubmit={handleSubmit}>
-        <h1>Admin Login</h1>
-        <p className="muted">Restricted area - separate from regular user accounts.</p>
+    <section className="auth-page">
+      <BlobField />
+      <form className={`auth-card glass-card card-in admin-login-card ${shake ? 'shake' : ''}`} onSubmit={handleSubmit} onAnimationEnd={() => setShake(false)}>
+        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild Admin</div>
+        <h1>Admin login</h1>
+        <p className="sub">Restricted area - separate from regular user accounts.</p>
 
         <label htmlFor="a-username">Admin username</label>
-        <input id="a-username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
+        <IconInput icon={IconUser} id="a-username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
 
         <label htmlFor="a-password">Password</label>
-        <input
-          id="a-password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
+        <PasswordInput icon={IconLock} id="a-password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
 
         {error && <p className="field-error" role="alert">{error}</p>}
 
         <button type="submit" className="btn btn-block" disabled={loading}>
+          {loading && <span className="spinner" />}
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>

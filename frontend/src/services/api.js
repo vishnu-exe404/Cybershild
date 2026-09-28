@@ -21,11 +21,14 @@ export const analyzeMessage = (text) => request('/analyze', { method: 'POST', bo
 
 // --- User auth ---
 export const registerRequest = (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) });
-export const loginRequest = (identifier, password) =>
-  request('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
+export const loginRequest = (identifier, password, rememberMe = false) =>
+  request('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password, rememberMe }) });
 export const logoutRequest = () => request('/auth/logout', { method: 'POST' });
 export const meRequest = () => request('/auth/me');
 export const completeOnboardingRequest = () => request('/auth/onboarding/complete', { method: 'POST' });
+export const forgotPasswordRequest = (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+export const resetPasswordRequest = (email, token, newPassword) =>
+  request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email, token, newPassword }) });
 
 // --- User history ---
 export const getMyHistory = () => request('/history');

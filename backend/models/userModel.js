@@ -29,6 +29,25 @@ async function markOnboarded(id) {
   return prisma.user.update({ where: { id }, data: { hasOnboarded: true }, select: PUBLIC_FIELDS });
 }
 
+async function findByEmail(email) {
+  return prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+}
+
+async function setResetToken(id, { tokenHash, expiresAt }) {
+  return prisma.user.update({ where: { id }, data: { resetTokenHash: tokenHash, resetTokenExpiresAt: expiresAt } });
+}
+
+async function clearResetToken(id) {
+  return prisma.user.update({ where: { id }, data: { resetTokenHash: null, resetTokenExpiresAt: null } });
+}
+
+async function resetPasswordWithToken(id, newPasswordHash) {
+  return prisma.user.update({
+    where: { id },
+    data: { passwordHash: newPasswordHash, resetTokenHash: null, resetTokenExpiresAt: null },
+  });
+}
+
 /** Admin user-management helpers */
 async function listUsers({ search, page = 1, pageSize = 20 }) {
   const where = search
@@ -79,10 +98,14 @@ module.exports = {
   createUser,
   findByEmailOrUsername,
   findById,
+  findByEmail,
   verifyPassword,
   markOnboarded,
   listUsers,
   updateUser,
   deleteUser,
   countUsers,
+  setResetToken,
+  clearResetToken,
+  resetPasswordWithToken,
 };

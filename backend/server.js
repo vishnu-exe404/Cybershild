@@ -51,7 +51,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Please wait a few minutes and try again.' },
 });
-app.use(['/api/auth/login', '/api/auth/register', '/api/admin/auth/login'], authLimiter);
+app.use(
+  ['/api/auth/login', '/api/auth/register', '/api/admin/auth/login', '/api/auth/forgot-password', '/api/auth/reset-password'],
+  authLimiter
+);
 
 // --- Routes ---
 app.get('/api/health', (req, res) => {

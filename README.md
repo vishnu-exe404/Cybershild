@@ -32,6 +32,14 @@ Risk Engine (unchanged) ──► Detection Modules ──► Risk Score
   `/history`. Logged-out visitors can still use it; nothing is saved for them beyond the same
   anonymized aggregate stats as before.
 
+## New in this version
+
+- **Redesigned UI**: dark-by-default premium theme with a light mode toggle, glass cards, animated gradient background, responsive header with mobile drawer, and an admin dashboard with a collapsible sidebar. One CSS design system (`frontend/src/styles/global.css`).
+- **Login**: password show/hide, "Remember me" (checked = 30-day persistent cookie; unchecked = browser-session cookie, 1-day token), loading and error states, forgot-password link. All against the real backend.
+- **Forgot / reset password**: real token generation, hashed storage and expiry. **No email provider is configured**, so the reset link is printed in the backend console instead of emailed. Wire up Resend/SendGrid/SES in `forgotPassword` in `backend/controllers/authController.js` before real use.
+- **Migration**: run `npm run prisma:migrate` again to apply `20260201000000_add_password_reset`.
+- New env var: `FRONTEND_URL` (used to build the reset link).
+
 ## Branding
 
 The logo is a hand-built SVG shield mark (`frontend/public/logo/cybershild-mark.svg`, also
@@ -105,6 +113,8 @@ Runs at `http://localhost:5173`.
 | POST | `/api/auth/logout` | — | Clear session |
 | GET | `/api/auth/me` | user | Current user + `hasOnboarded` |
 | POST | `/api/auth/onboarding/complete` | user | Mark onboarding done |
+| POST | `/api/auth/forgot-password` | — | Request a reset link (generic response, never reveals if the email exists) |
+| POST | `/api/auth/reset-password` | — | `{ email, token, newPassword }` - token is hashed, single-use, 15 min expiry |
 | GET | `/api/history` | user | The caller's own analysis history |
 | POST | `/api/analyze` | optional | Risk-check text; saved to history if logged in |
 | POST | `/api/admin/auth/login` | — | Admin login (sets `csap_admin_session` cookie) |

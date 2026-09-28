@@ -19,9 +19,9 @@ function createSessionAuth({ cookieName, secretEnvVar, ttlEnvVar, defaultTtl }) 
     return secret;
   }
 
-  function sign(payload) {
+  function sign(payload, expiresIn) {
     return jwt.sign(payload, getSecret(), {
-      expiresIn: process.env[ttlEnvVar] || defaultTtl,
+      expiresIn: expiresIn || process.env[ttlEnvVar] || defaultTtl,
     });
   }
 
@@ -29,14 +29,21 @@ function createSessionAuth({ cookieName, secretEnvVar, ttlEnvVar, defaultTtl }) 
     return jwt.verify(token, getSecret());
   }
 
-  function setCookie(res, token) {
-    res.cookie(cookieName, token, {
+  /**
+   * remember=true -> persistent cookie (30 days) so the session survives
+   * browser restarts. remember=false -> a real *session cookie* (no
+   * maxAge at all), so the browser drops it the moment it's closed -
+   * this is what "remember me" unchecked should actually mean.
+   */
+  function setCookie(res, token, { remember = true } = {}) {
+    const options = {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',
       path: '/',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days ceiling; JWT expiry is the real limit
-    });
+    };
+    if (remember) options.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+    res.cookie(cookieName, token, options);
   }
 
   function clearCookie(res) {

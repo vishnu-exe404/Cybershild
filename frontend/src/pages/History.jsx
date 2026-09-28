@@ -20,6 +20,7 @@ export default function History() {
   return (
     <section className="fade-in">
       <h1>Your Check History</h1>
+      <p className="muted" style={{ marginTop: '-0.5rem', marginBottom: '1.25rem' }}>Every message you've checked while signed in.</p>
       {error && <p className="field-error">{error}</p>}
 
       {!records && !error && (
@@ -34,7 +35,7 @@ export default function History() {
       {records && records.length > 0 && (
         <div className="history-list">
           {records.map((r) => (
-            <div key={r.id} className="card history-item">
+            <div key={r.id} className="card history-item fade-in">
               <div className="history-item-top">
                 <RiskBadge level={r.riskLevel} />
                 <span className="muted">{new Date(r.createdAt).toLocaleString()}</span>

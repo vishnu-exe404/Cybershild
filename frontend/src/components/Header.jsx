@@ -1,21 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../services/i18n.jsx';
 import { useUserAuth } from '../services/userAuth.jsx';
 import { useToast } from '../services/toast.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
+import { IconMenu, IconClose } from './icons.jsx';
 
 export default function Header() {
   const { t } = useLanguage();
   const { isAuthenticated, user, logout } = useUserAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
     await logout();
     showToast('Logged out.', 'info');
+    setMobileOpen(false);
     navigate('/');
   }
+
+  const linkClass = ({ isActive }) => (isActive ? 'nav-link active' : 'nav-link');
+
+  const navLinks = (
+    <>
+      <NavLink to="/" end className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.home')}</NavLink>
+      {isAuthenticated && (
+        <NavLink to="/history" className={linkClass} onClick={() => setMobileOpen(false)}>History</NavLink>
+      )}
+      <NavLink to="/about" className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.about')}</NavLink>
+      {isAuthenticated ? (
+        <>
+          <span className="nav-user">Hi, {user.name.split(' ')[0]}</span>
+          <button type="button" className="nav-link nav-link--button" onClick={handleLogout}>Log out</button>
+        </>
+      ) : (
+        <>
+          <NavLink to="/login" className={linkClass} onClick={() => setMobileOpen(false)}>Log in</NavLink>
+          <NavLink to="/register" className="nav-link nav-link--cta" onClick={() => setMobileOpen(false)}>Sign up</NavLink>
+        </>
+      )}
+    </>
+  );
 
   return (
     <header className="header">
@@ -25,40 +52,32 @@ export default function Header() {
           <span className="brand-name">{t('appName')}</span>
         </Link>
 
-        <nav className="nav" aria-label="Main navigation">
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            {t('nav.home')}
-          </NavLink>
-          {isAuthenticated && (
-            <NavLink to="/history" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-              History
-            </NavLink>
-          )}
-          <NavLink to="/about" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            {t('nav.about')}
-          </NavLink>
+        <nav className="nav" aria-label="Main navigation">{navLinks}</nav>
 
-          {isAuthenticated ? (
-            <>
-              <span className="nav-user">Hi, {user.name.split(' ')[0]}</span>
-              <button type="button" className="nav-link nav-link--button" onClick={handleLogout}>
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <NavLink to="/login" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-                Log in
-              </NavLink>
-              <NavLink to="/register" className="nav-link nav-link--cta">
-                Sign up
-              </NavLink>
-            </>
-          )}
-        </nav>
-
-        <LanguageSelector />
+        <div className="header-right">
+          <LanguageSelector />
+          <ThemeToggle />
+          <button
+            type="button"
+            className="mobile-nav-toggle"
+            aria-label="Open menu"
+            onClick={() => setMobileOpen(true)}
+          >
+            <IconMenu />
+          </button>
+        </div>
       </div>
+
+      {mobileOpen && (
+        <div className="mobile-nav-panel">
+          <div className="mobile-nav-close">
+            <button type="button" className="mobile-nav-toggle" aria-label="Close menu" onClick={() => setMobileOpen(false)} style={{ display: 'flex' }}>
+              <IconClose />
+            </button>
+          </div>
+          <nav className="nav" aria-label="Mobile navigation">{navLinks}</nav>
+        </div>
+      )}
     </header>
   );
 }

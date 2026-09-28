@@ -7,10 +7,11 @@ export default function AnalyzeButton({ onClick, loading, disabled }) {
   return (
     <button
       type="button"
-      className="analyze-button"
+      className="btn analyze-button"
       onClick={onClick}
       disabled={disabled || loading}
     >
+      {loading && <span className="spinner" />}
       {loading ? t('input.analyzing') : t('input.analyze')}
     </button>
   );
