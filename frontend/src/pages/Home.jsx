@@ -5,6 +5,7 @@ import { analyzeMessage } from '../services/api.js';
 import BlobField from '../components/BlobField.jsx';
 import MessageInput from '../components/MessageInput.jsx';
 import AnalyzeButton from '../components/AnalyzeButton.jsx';
+import TypeText from '../components/TypeText.jsx';
 
 const SAMPLES = [
   {
@@ -50,11 +51,12 @@ export default function Home() {
     <section className="home-page">
       <BlobField />
       <div className="hero fade-in">
-        <h1>Know if it's a scam before you act on it.</h1>
-        <p className="hero-tagline">{t('tagline')}</p>
+        <p className="hero-kicker">&gt; THREAT SCANNER // ONLINE</p>
+        <h1 className="glitch" data-text="Know if it's a scam before you act on it.">Know if it's a scam before you act on it.</h1>
+        <p className="hero-tagline"><TypeText text={t('tagline')} /></p>
       </div>
 
-      <div className="analyze-card glass-card card-in">
+      <div className={`analyze-card glass-card card-in ${loading ? 'scanning' : ''}`}>
         <MessageInput value={text} onChange={setText} error={error} />
         <div className="analyze-actions">
           <AnalyzeButton onClick={handleAnalyze} loading={loading} disabled={!text.trim()} />

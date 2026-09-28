@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 
 async function main() {
-  const username = process.env.ADMIN_USERNAME;
+  const username = (process.env.ADMIN_USERNAME || '').trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
 
   if (!username || !password) {

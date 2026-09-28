@@ -12,12 +12,21 @@ async function createUser({ name, email, username, password }) {
 }
 
 async function findByEmailOrUsername(identifier) {
-  const value = identifier.toLowerCase();
+  const value = identifier.trim().toLowerCase();
   return prisma.user.findFirst({ where: { OR: [{ email: value }, { username: value }] } });
 }
 
 async function findById(id) {
   return prisma.user.findUnique({ where: { id }, select: PUBLIC_FIELDS });
+}
+
+async function findByEmail(email) {
+  return prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+}
+
+/** Needs the hash, so it returns the full row. Only used for password checks. */
+async function findWithHashById(id) {
+  return prisma.user.findUnique({ where: { id } });
 }
 
 async function verifyPassword(user, password) {
@@ -29,16 +38,13 @@ async function markOnboarded(id) {
   return prisma.user.update({ where: { id }, data: { hasOnboarded: true }, select: PUBLIC_FIELDS });
 }
 
-async function findByEmail(email) {
-  return prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+async function setPassword(id, newPassword) {
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  return prisma.user.update({ where: { id }, data: { passwordHash }, select: PUBLIC_FIELDS });
 }
 
 async function setResetToken(id, { tokenHash, expiresAt }) {
   return prisma.user.update({ where: { id }, data: { resetTokenHash: tokenHash, resetTokenExpiresAt: expiresAt } });
-}
-
-async function clearResetToken(id) {
-  return prisma.user.update({ where: { id }, data: { resetTokenHash: null, resetTokenExpiresAt: null } });
 }
 
 async function resetPasswordWithToken(id, newPasswordHash) {
@@ -48,7 +54,19 @@ async function resetPasswordWithToken(id, newPasswordHash) {
   });
 }
 
-/** Admin user-management helpers */
+/** Partial update - used by both self-service profile edit and admin edit. */
+async function updateUser(id, { name, email, username }) {
+  return prisma.user.update({
+    where: { id },
+    data: {
+      ...(name !== undefined && { name: name.trim() }),
+      ...(email !== undefined && { email: email.trim().toLowerCase() }),
+      ...(username !== undefined && { username: username.trim().toLowerCase() }),
+    },
+    select: PUBLIC_FIELDS,
+  });
+}
+
 async function listUsers({ search, page = 1, pageSize = 20 }) {
   const where = search
     ? {
@@ -74,18 +92,6 @@ async function listUsers({ search, page = 1, pageSize = 20 }) {
   return { items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
-async function updateUser(id, { name, email, username }) {
-  return prisma.user.update({
-    where: { id },
-    data: {
-      ...(name !== undefined && { name }),
-      ...(email !== undefined && { email: email.toLowerCase() }),
-      ...(username !== undefined && { username: username.toLowerCase() }),
-    },
-    select: PUBLIC_FIELDS,
-  });
-}
-
 async function deleteUser(id) {
   return prisma.user.delete({ where: { id } });
 }
@@ -99,13 +105,14 @@ module.exports = {
   findByEmailOrUsername,
   findById,
   findByEmail,
+  findWithHashById,
   verifyPassword,
   markOnboarded,
-  listUsers,
+  setPassword,
+  setResetToken,
+  resetPasswordWithToken,
   updateUser,
+  listUsers,
   deleteUser,
   countUsers,
-  setResetToken,
-  clearResetToken,
-  resetPasswordWithToken,
 };

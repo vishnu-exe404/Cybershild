@@ -2,13 +2,19 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 const { userAuth } = require('../utils/sessionAuth');
-const { validateRegistration } = require('../utils/validate');
+const { validateRegistration, validateProfileFields, validateNewPassword } = require('../utils/validate');
 
 const PRISMA_UNIQUE_VIOLATION = 'P2002';
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 function hashToken(rawToken) {
   return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
+
+function uniqueField(err) {
+  const target = err.meta?.target;
+  const text = Array.isArray(target) ? target.join(',') : String(target || '');
+  return text.includes('email') ? 'email' : 'username';
 }
 
 async function register(req, res, next) {
@@ -24,7 +30,7 @@ async function register(req, res, next) {
       user = await userModel.createUser({ name: name.trim(), email, username, password });
     } catch (err) {
       if (err.code === PRISMA_UNIQUE_VIOLATION) {
-        const field = err.meta?.target?.includes('email') ? 'email' : 'username';
+        const field = uniqueField(err);
         return res.status(409).json({
           error: field === 'email' ? 'An account with this email already exists.' : 'This username is already taken.',
           fieldErrors: { [field]: 'Already in use.' },
@@ -33,8 +39,7 @@ async function register(req, res, next) {
       throw err;
     }
 
-    const token = userAuth.sign({ sub: user.id });
-    userAuth.setCookie(res, token, { remember: true });
+    userAuth.setCookie(res, userAuth.sign({ sub: user.id }), { remember: true });
     res.status(201).json({ user });
   } catch (err) {
     next(err);
@@ -44,23 +49,20 @@ async function register(req, res, next) {
 async function login(req, res, next) {
   try {
     const { identifier, password, rememberMe } = req.body || {};
-    if (!identifier || !password) {
+    if (typeof identifier !== 'string' || typeof password !== 'string' || !identifier.trim() || !password) {
       return res.status(400).json({ error: 'Enter your email/username and password.' });
     }
 
     const user = await userModel.findByEmailOrUsername(identifier);
     const valid = await userModel.verifyPassword(user, password);
-
     if (!user || !valid) {
       return res.status(401).json({ error: 'Incorrect email/username or password.' });
     }
 
-    // "Remember me" checked -> 30-day token + persistent cookie.
-    // Unchecked -> a short-lived token in a true browser-session cookie
-    // (no maxAge), so it's gone the moment the browser is closed.
+    // "Remember me": 30-day token + persistent cookie. Otherwise a 1-day token in a
+    // true browser-session cookie (dropped when the browser closes).
     const remember = Boolean(rememberMe);
-    const token = userAuth.sign({ sub: user.id }, remember ? '30d' : '1d');
-    userAuth.setCookie(res, token, { remember });
+    userAuth.setCookie(res, userAuth.sign({ sub: user.id }, remember ? '30d' : '1d'), { remember });
 
     res.json({
       user: {
@@ -104,9 +106,62 @@ async function completeOnboarding(req, res, next) {
   }
 }
 
-// Always the same generic response, whether or not the email exists -
-// this is deliberate: telling the caller "no account with that email"
-// would let anyone enumerate registered accounts.
+/** Self-service profile edit (name / email / username). */
+async function updateProfile(req, res, next) {
+  try {
+    const { name, email, username } = req.body || {};
+    const errors = validateProfileFields({ name, email, username });
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ error: Object.values(errors)[0], fieldErrors: errors });
+    }
+    const user = await userModel.updateUser(req.userId, { name, email, username });
+    res.json({ user });
+  } catch (err) {
+    if (err.code === PRISMA_UNIQUE_VIOLATION) {
+      const field = uniqueField(err);
+      return res.status(409).json({
+        error: field === 'email' ? 'That email is already in use.' : 'That username is already taken.',
+        fieldErrors: { [field]: 'Already in use.' },
+      });
+    }
+    if (err.code === 'P2025') {
+      userAuth.clearCookie(res);
+      return res.status(401).json({ error: 'Session no longer valid.' });
+    }
+    next(err);
+  }
+}
+
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof currentPassword !== 'string' || !currentPassword) {
+      return res.status(400).json({ error: 'Enter your current password.' });
+    }
+    const problem = validateNewPassword(newPassword);
+    if (problem) return res.status(400).json({ error: problem });
+
+    const user = await userModel.findWithHashById(req.userId);
+    if (!user) {
+      userAuth.clearCookie(res);
+      return res.status(401).json({ error: 'Session no longer valid.' });
+    }
+    if (!(await userModel.verifyPassword(user, currentPassword))) {
+      return res.status(401).json({ error: 'Your current password is incorrect.' });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'Choose a new password different from the current one.' });
+    }
+
+    await userModel.setPassword(user.id, newPassword);
+    res.json({ ok: true, message: 'Password updated.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Same generic response whether or not the email exists, so the endpoint can't be
+// used to discover which emails are registered.
 const GENERIC_FORGOT_RESPONSE = {
   ok: true,
   message: 'If an account exists for that email, a password reset link has been sent.',
@@ -115,7 +170,7 @@ const GENERIC_FORGOT_RESPONSE = {
 async function forgotPassword(req, res, next) {
   try {
     const { email } = req.body || {};
-    if (!email) {
+    if (typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ error: 'Enter your email address.' });
     }
 
@@ -127,13 +182,11 @@ async function forgotPassword(req, res, next) {
         expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
       });
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
       const resetLink = `${frontendUrl}/reset-password?email=${encodeURIComponent(user.email)}&token=${rawToken}`;
 
-      // NOTE: this project has no email provider configured, so the
-      // "email" is logged server-side instead of actually being sent.
-      // Wire up a real provider (Resend, SendGrid, SES, etc.) here and
-      // replace this console.log with an actual send call.
+      // No email provider is configured, so the link is logged server-side instead of
+      // emailed. Replace this console.log with a real send (Resend, SendGrid, SES...).
       console.log(`[password reset] Link for ${user.email} (valid 15 min): ${resetLink}`);
     }
 
@@ -146,33 +199,39 @@ async function forgotPassword(req, res, next) {
 async function resetPassword(req, res, next) {
   try {
     const { email, token, newPassword } = req.body || {};
-    if (!email || !token || !newPassword) {
+    if (typeof email !== 'string' || typeof token !== 'string' || !email || !token) {
       return res.status(400).json({ error: 'This reset link is missing required information.' });
     }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
-    }
+    const problem = validateNewPassword(newPassword);
+    if (problem) return res.status(400).json({ error: problem });
 
     const user = await userModel.findByEmail(email);
-    const tokenHash = hashToken(token);
     const valid =
       user &&
       user.resetTokenHash &&
-      user.resetTokenHash === tokenHash &&
+      user.resetTokenHash === hashToken(token) &&
       user.resetTokenExpiresAt &&
-      user.resetTokenExpiresAt.getTime() > Date.now();
+      new Date(user.resetTokenExpiresAt).getTime() > Date.now();
 
     if (!valid) {
       return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    await userModel.resetPasswordWithToken(user.id, passwordHash);
-
+    await userModel.resetPasswordWithToken(user.id, await bcrypt.hash(newPassword, 12));
     res.json({ ok: true, message: 'Password updated. You can now log in with your new password.' });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { register, login, logout, me, completeOnboarding, forgotPassword, resetPassword };
+module.exports = {
+  register,
+  login,
+  logout,
+  me,
+  completeOnboarding,
+  updateProfile,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};

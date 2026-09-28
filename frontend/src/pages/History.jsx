@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { getMyHistory } from '../services/api.js';
+import { getMyHistory, deleteHistoryItemRequest, clearHistoryRequest } from '../services/api.js';
+import { useToast } from '../services/toast.jsx';
 import { SkeletonCard } from '../components/Skeleton.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import RiskBadge from '../components/RiskBadge.jsx';
 
 export default function History() {
+  const { showToast } = useToast();
   const [records, setRecords] = useState(null);
   const [error, setError] = useState('');
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -17,19 +21,44 @@ export default function History() {
     };
   }, []);
 
+  async function removeOne(id) {
+    try {
+      await deleteHistoryItemRequest(id);
+      setRecords((rs) => rs.filter((r) => r.id !== id));
+      showToast('Removed from history.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function clearAll() {
+    try {
+      await clearHistoryRequest();
+      setRecords([]);
+      showToast('History cleared.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setConfirmClear(false);
+    }
+  }
+
   return (
     <section className="fade-in">
-      <h1>Your Check History</h1>
-      <p className="muted" style={{ marginTop: '-0.5rem', marginBottom: '1.25rem' }}>Every message you've checked while signed in.</p>
+      <div className="dashboard-header">
+        <div>
+          <h1 style={{ margin: 0 }}>Your Check History</h1>
+          <p className="muted">Every message you've checked while signed in.</p>
+        </div>
+        {records && records.length > 0 && (
+          <button type="button" className="btn-outline btn-danger-outline" onClick={() => setConfirmClear(true)}>
+            Clear all
+          </button>
+        )}
+      </div>
+
       {error && <p className="field-error">{error}</p>}
-
-      {!records && !error && (
-        <>
-          <SkeletonCard />
-          <SkeletonCard />
-        </>
-      )}
-
+      {!records && !error && (<><SkeletonCard /><SkeletonCard /></>)}
       {records && records.length === 0 && <p className="empty-state">You haven't analyzed anything yet.</p>}
 
       {records && records.length > 0 && (
@@ -46,11 +75,26 @@ export default function History() {
                 ))}
                 {(r.detectedThreats || []).length === 0 && <span className="muted">No threats detected</span>}
               </div>
-              <span className="muted score-inline">Score: {r.riskScore}/100 · {r.inputType}</span>
+              <div className="history-item-top" style={{ marginBottom: 0 }}>
+                <span className="muted score-inline">Score: {r.riskScore}/100 · {r.inputType}</span>
+                <button type="button" className="btn-outline btn-sm btn-danger-outline" style={{ marginRight: 0 }} onClick={() => removeOne(r.id)}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="Clear all history?"
+        message="This permanently removes every saved check from your account."
+        confirmLabel="Clear all"
+        danger
+        onConfirm={clearAll}
+        onCancel={() => setConfirmClear(false)}
+      />
     </section>
   );
 }

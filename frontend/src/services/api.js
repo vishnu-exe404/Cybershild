@@ -25,6 +25,9 @@ export const loginRequest = (identifier, password, rememberMe = false) =>
   request('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password, rememberMe }) });
 export const logoutRequest = () => request('/auth/logout', { method: 'POST' });
 export const meRequest = () => request('/auth/me');
+export const updateProfileRequest = (payload) => request('/auth/me', { method: 'PATCH', body: JSON.stringify(payload) });
+export const changePasswordRequest = (currentPassword, newPassword) =>
+  request('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
 export const completeOnboardingRequest = () => request('/auth/onboarding/complete', { method: 'POST' });
 export const forgotPasswordRequest = (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
 export const resetPasswordRequest = (email, token, newPassword) =>
@@ -32,6 +35,8 @@ export const resetPasswordRequest = (email, token, newPassword) =>
 
 // --- User history ---
 export const getMyHistory = () => request('/history');
+export const deleteHistoryItemRequest = (id) => request(`/history/${id}`, { method: 'DELETE' });
+export const clearHistoryRequest = () => request('/history', { method: 'DELETE' });
 
 // --- Admin auth ---
 export const adminLoginRequest = (username, password) =>
@@ -45,6 +50,7 @@ export const listUsersRequest = (params = {}) => {
   const qs = new URLSearchParams(params).toString();
   return request(`/admin/users${qs ? `?${qs}` : ''}`);
 };
+export const createUserRequest = (payload) => request('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
 export const updateUserRequest = (id, payload) =>
   request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const deleteUserRequest = (id) => request(`/admin/users/${id}`, { method: 'DELETE' });

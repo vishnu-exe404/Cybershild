@@ -5,6 +5,7 @@ import {
   logoutRequest,
   meRequest,
   completeOnboardingRequest,
+  updateProfileRequest,
 } from './api.js';
 
 const UserAuthContext = createContext(null);
@@ -37,13 +38,19 @@ export function UserAuthProvider({ children }) {
     setUser(null);
   }
 
+  async function updateProfile(payload) {
+    const data = await updateProfileRequest(payload);
+    setUser(data.user);
+    return data.user;
+  }
+
   async function completeOnboarding() {
     const data = await completeOnboardingRequest();
     setUser(data.user);
   }
 
   const value = useMemo(
-    () => ({ user, loading, isAuthenticated: Boolean(user), register, login, logout, completeOnboarding }),
+    () => ({ user, loading, isAuthenticated: Boolean(user), register, login, logout, completeOnboarding, updateProfile }),
     [user, loading]
   );
 

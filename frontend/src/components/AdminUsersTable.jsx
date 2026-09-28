@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listUsersRequest, updateUserRequest, deleteUserRequest } from '../services/api.js';
+import { listUsersRequest, updateUserRequest, deleteUserRequest, createUserRequest } from '../services/api.js';
 import { useToast } from '../services/toast.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { SkeletonTableRows } from './Skeleton.jsx';
@@ -14,6 +14,10 @@ export default function AdminUsersTable() {
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', username: '' });
   const [deletingUser, setDeletingUser] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', email: '', username: '', password: '' });
+  const [createErrors, setCreateErrors] = useState({});
+  const [createError, setCreateError] = useState('');
 
   function load() {
     setLoading(true);
@@ -50,6 +54,22 @@ export default function AdminUsersTable() {
     }
   }
 
+  async function submitCreate() {
+    setCreateError('');
+    setCreateErrors({});
+    try {
+      await createUserRequest(createForm);
+      showToast('User created.', 'success');
+      setCreating(false);
+      setCreateForm({ name: '', email: '', username: '', password: '' });
+      setPage(1);
+      load();
+    } catch (err) {
+      setCreateError(err.message);
+      if (err.fieldErrors) setCreateErrors(err.fieldErrors);
+    }
+  }
+
   async function confirmDelete() {
     try {
       await deleteUserRequest(deletingUser.id);
@@ -68,6 +88,7 @@ export default function AdminUsersTable() {
         <form onSubmit={handleSearchSubmit} className="search-form">
           <input placeholder="Search name, email, username..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <button type="submit" className="btn-outline">Search</button>
+          <button type="button" className="btn btn-sm" style={{ marginRight: 0 }} onClick={() => setCreating(true)}>+ Add user</button>
         </form>
       </div>
 
@@ -129,6 +150,32 @@ export default function AdminUsersTable() {
             <div className="modal-actions">
               <button className="btn-outline" onClick={() => setEditingUser(null)}>Cancel</button>
               <button className="btn" onClick={saveEdit}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {creating && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Add user">
+          <div className="modal-card">
+            <h3>Add user</h3>
+            {['name', 'email', 'username', 'password'].map((f) => (
+              <div key={f}>
+                <label>{f[0].toUpperCase() + f.slice(1)}</label>
+                <input
+                  type={f === 'password' ? 'password' : 'text'}
+                  value={createForm[f]}
+                  className={createErrors[f] ? 'invalid' : ''}
+                  onChange={(e) => setCreateForm((c) => ({ ...c, [f]: e.target.value }))}
+                  autoComplete={f === 'password' ? 'new-password' : 'off'}
+                />
+                {createErrors[f] && <p className="field-error">{createErrors[f]}</p>}
+              </div>
+            ))}
+            {createError && !Object.keys(createErrors).length && <p className="field-error" role="alert">{createError}</p>}
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setCreating(false)}>Cancel</button>
+              <button className="btn" onClick={submitCreate}>Create</button>
             </div>
           </div>
         </div>

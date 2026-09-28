@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" role="img" aria-label="CyberShild logo">
   <defs>
     <linearGradient id="csGrad" x1="0" y1="0" x2="200" y2="220" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#4f46e5"/>
-      <stop offset="0.5" stop-color="#6366f1"/>
-      <stop offset="1" stop-color="#06b6d4"/>
+      <stop offset="0" stop-color="#6d4dff"/>
+      <stop offset="0.5" stop-color="#12b9ff"/>
+      <stop offset="1" stop-color="#00f5d4"/>
     </linearGradient>
   </defs>
 

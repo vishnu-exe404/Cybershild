@@ -3,11 +3,21 @@ const jwt = require('jsonwebtoken');
 const isProd = process.env.NODE_ENV === 'production';
 
 /**
- * Builds a { sign, verify, cookieName, setCookie, clearCookie } helper for
- * one auth "realm" (user or admin). Each realm has its own secret, cookie
- * name, and expiry - so a leaked user token can never be replayed against
- * admin routes and vice versa.
+ * Cookie SameSite policy.
+ *  - 'lax'  (default): frontend and backend share a site (e.g. localhost, or same domain).
+ *  - 'none': frontend and backend are on DIFFERENT domains (e.g. Vercel + Render).
+ *            Browsers require Secure for this, so it is forced on.
  */
+function cookieBase() {
+  const sameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
+  return {
+    httpOnly: true,
+    secure: isProd || sameSite === 'none',
+    sameSite,
+    path: '/',
+  };
+}
+
 function createSessionAuth({ cookieName, secretEnvVar, ttlEnvVar, defaultTtl }) {
   function getSecret() {
     const secret = process.env[secretEnvVar];
@@ -29,25 +39,15 @@ function createSessionAuth({ cookieName, secretEnvVar, ttlEnvVar, defaultTtl }) 
     return jwt.verify(token, getSecret());
   }
 
-  /**
-   * remember=true -> persistent cookie (30 days) so the session survives
-   * browser restarts. remember=false -> a real *session cookie* (no
-   * maxAge at all), so the browser drops it the moment it's closed -
-   * this is what "remember me" unchecked should actually mean.
-   */
+  /** remember=true -> persistent 30-day cookie; false -> browser-session cookie. */
   function setCookie(res, token, { remember = true } = {}) {
-    const options = {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'lax',
-      path: '/',
-    };
-    if (remember) options.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+    const options = cookieBase();
+    if (remember) options.maxAge = 1000 * 60 * 60 * 24 * 30;
     res.cookie(cookieName, token, options);
   }
 
   function clearCookie(res) {
-    res.clearCookie(cookieName, { httpOnly: true, secure: isProd, sameSite: 'lax', path: '/' });
+    res.clearCookie(cookieName, cookieBase());
   }
 
   return { cookieName, sign, verify, setCookie, clearCookie };

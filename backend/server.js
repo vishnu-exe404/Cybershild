@@ -16,6 +16,9 @@ const prisma = require('./config/prisma');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Behind a proxy (Render, Railway, Vercel...) so rate limiting sees the real client IP.
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
+
 // --- Security / infra middleware ---
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
@@ -57,8 +60,19 @@ app.use(
 );
 
 // --- Routes ---
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'cybershild-backend', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  let db = 'ok';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch {
+    db = 'down';
+  }
+  res.status(db === 'ok' ? 200 : 503).json({
+    status: db === 'ok' ? 'ok' : 'degraded',
+    db,
+    service: 'cybershild-backend',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use('/api/analyze', analysisRoutes);

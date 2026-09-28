@@ -9,4 +9,23 @@ async function getMyHistory(req, res, next) {
   }
 }
 
-module.exports = { getMyHistory };
+async function deleteMyHistoryItem(req, res, next) {
+  try {
+    const deleted = await analysisModel.deleteHistoryItem(req.userId, req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'History item not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function clearMyHistory(req, res, next) {
+  try {
+    const deleted = await analysisModel.clearHistory(req.userId);
+    res.json({ ok: true, deleted });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getMyHistory, deleteMyHistoryItem, clearMyHistory };

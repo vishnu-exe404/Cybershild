@@ -1,23 +1,18 @@
 const express = require('express');
-const {
-  register,
-  login,
-  logout,
-  me,
-  completeOnboarding,
-  forgotPassword,
-  resetPassword,
-} = require('../controllers/authController');
+const c = require('../controllers/authController');
 const { requireUser } = require('../middleware/requireUser');
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', logout);
-router.get('/me', requireUser, me);
-router.post('/onboarding/complete', requireUser, completeOnboarding);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/register', c.register);
+router.post('/login', c.login);
+router.post('/logout', c.logout);
+router.post('/forgot-password', c.forgotPassword);
+router.post('/reset-password', c.resetPassword);
+
+router.get('/me', requireUser, c.me);
+router.patch('/me', requireUser, c.updateProfile);
+router.post('/change-password', requireUser, c.changePassword);
+router.post('/onboarding/complete', requireUser, c.completeOnboarding);
 
 module.exports = router;

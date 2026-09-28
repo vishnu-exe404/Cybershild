@@ -40,6 +40,15 @@ Risk Engine (unchanged) ──► Detection Modules ──► Risk Score
 - **Migration**: run `npm run prisma:migrate` again to apply `20260201000000_add_password_reset`.
 - New env var: `FRONTEND_URL` (used to build the reset link).
 
+## Animated cyber theme
+
+Matrix-rain canvas, moving perspective grid, scanlines, HUD corner brackets, glitch title, typed tagline, scanning animation while a message is analysed, animated risk ring, and a live **SYSTEM ONLINE** pill that polls `/api/health` (shows DB-down / API-offline states). Dark is default; light mode has a toned-down version. All motion honours `prefers-reduced-motion`; the rain pauses when the tab is hidden and is capped at ~30fps.
+
+## Verifying the backend
+
+- `cd backend && npm run smoke` (with the server running) exercises register, login, sessions, history, profile, password change, admin login, user search, stats and cleanup against your **real** database.
+- Cross-domain deploy (frontend on Vercel, backend on Render)? Set `COOKIE_SAMESITE=none` and `CORS_ORIGIN` to the frontend URL, both over HTTPS.
+
 ## Branding
 
 The logo is a hand-built SVG shield mark (`frontend/public/logo/cybershild-mark.svg`, also
@@ -113,6 +122,12 @@ Runs at `http://localhost:5173`.
 | POST | `/api/auth/logout` | — | Clear session |
 | GET | `/api/auth/me` | user | Current user + `hasOnboarded` |
 | POST | `/api/auth/onboarding/complete` | user | Mark onboarding done |
+| PATCH | `/api/auth/me` | user | Edit own name / email / username |
+| POST | `/api/auth/change-password` | user | `{ currentPassword, newPassword }` |
+| DELETE | `/api/history/:id` | user | Delete one of *your own* history items |
+| DELETE | `/api/history` | user | Clear your history |
+| POST | `/api/admin/users` | admin | Create a user |
+| GET | `/api/admin/users/:id` | admin | Get one user |
 | POST | `/api/auth/forgot-password` | — | Request a reset link (generic response, never reveals if the email exists) |
 | POST | `/api/auth/reset-password` | — | `{ email, token, newPassword }` - token is hashed, single-use, 15 min expiry |
 | GET | `/api/history` | user | The caller's own analysis history |

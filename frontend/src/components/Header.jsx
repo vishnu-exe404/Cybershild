@@ -5,6 +5,7 @@ import { useUserAuth } from '../services/userAuth.jsx';
 import { useToast } from '../services/toast.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import StatusPill from './StatusPill.jsx';
 import { IconMenu, IconClose } from './icons.jsx';
 
 export default function Header() {
@@ -27,7 +28,10 @@ export default function Header() {
     <>
       <NavLink to="/" end className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.home')}</NavLink>
       {isAuthenticated && (
-        <NavLink to="/history" className={linkClass} onClick={() => setMobileOpen(false)}>History</NavLink>
+        <>
+          <NavLink to="/history" className={linkClass} onClick={() => setMobileOpen(false)}>History</NavLink>
+          <NavLink to="/account" className={linkClass} onClick={() => setMobileOpen(false)}>Account</NavLink>
+        </>
       )}
       <NavLink to="/about" className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.about')}</NavLink>
       {isAuthenticated ? (
@@ -55,6 +59,7 @@ export default function Header() {
         <nav className="nav" aria-label="Main navigation">{navLinks}</nav>
 
         <div className="header-right">
+          <StatusPill />
           <LanguageSelector />
           <ThemeToggle />
           <button
