@@ -454,3 +454,64 @@ input:focus, textarea:focus, select:focus { border-color: var(--c1); box-shadow:
 :root[data-theme="light"] .btn, :root[data-theme="light"] .nav-link--cta { color: #fff !important; }
 :root[data-theme="light"] .spinner { border-color: rgba(255,255,255,.4); border-top-color: #fff; }
 .cyber-rain { opacity: .26; }
+
+/* =====================================================================
+   CONSOLE - tabs, live feed, scanner suite, vault, golden hour, quiz
+   ===================================================================== */
+.mode-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+.mode-tab {
+  background: var(--glass); border: 1px solid var(--border); color: var(--muted); padding: .55rem 1.1rem;
+  border-radius: 999px; cursor: pointer; font-family: var(--font-mono); font-size: .8rem; letter-spacing: .04em;
+  text-transform: uppercase; transition: all var(--transition-fast);
+}
+.mode-tab:hover { color: var(--text); border-color: var(--c1); }
+.mode-tab.active { color: #0b0b18; background: var(--grad); border-color: transparent; box-shadow: var(--glow); }
+
+/* Live feed */
+.feed-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.feed-radar-card, .feed-stats-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.feed-list-card { grid-column: 1 / -1; }
+.radar-canvas { display: block; margin: 0 auto; }
+.feed-radar-caption { margin-top: .5rem; font-size: .75rem; }
+.feed-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.feed-item { display: flex; align-items: center; gap: .75rem; padding: .5rem .25rem; border-bottom: 1px solid var(--border); font-size: .88rem; }
+.feed-item-cat { flex: 1; color: var(--text); }
+.feed-item-time { font-family: var(--font-mono); font-size: .78rem; }
+@media (max-width: 760px) { .feed-layout { grid-template-columns: 1fr; } }
+
+/* Password vault */
+.vault-result { margin-top: 1rem; }
+.vault-meter { height: 8px; border-radius: 999px; background: var(--glass); overflow: hidden; margin-bottom: .6rem; }
+.vault-meter-fill { height: 100%; border-radius: 999px; transition: width var(--transition-med); }
+.vault-high .vault-meter-fill, .vault-meter-fill.vault-high { background: var(--high); }
+.vault-caution .vault-meter-fill, .vault-meter-fill.vault-caution { background: var(--caution); }
+.vault-safe .vault-meter-fill, .vault-meter-fill.vault-safe { background: var(--safe); }
+.vault-summary { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; flex-wrap: wrap; }
+.vault-checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; font-size: .88rem; }
+.vault-check-pass { color: var(--safe); } .vault-check-fail { color: var(--muted); }
+
+/* Golden hour */
+.golden-hour { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.golden-hour .card:last-child { grid-column: 1 / -1; }
+.golden-timer-card { text-align: center; }
+.golden-timer { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; color: var(--c1); text-shadow: 0 0 20px color-mix(in srgb, var(--c1) 55%, transparent); margin: .75rem 0; }
+.golden-steps { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .7rem; margin: 0; }
+.complaint-draft {
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;
+  font-family: var(--font-mono); font-size: .78rem; white-space: pre-wrap; overflow-x: auto; max-height: 320px; overflow-y: auto; color: var(--text);
+}
+@media (max-width: 760px) { .golden-hour { grid-template-columns: 1fr; } }
+
+/* Scam encyclopedia */
+.encyclopedia-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.encyclopedia-quote { font-family: var(--font-mono); font-size: .85rem; color: var(--c1); font-style: italic; border-left: 2px solid var(--c1); padding-left: .75rem; margin: .5rem 0 .9rem; }
+.encyclopedia-truth { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--border); font-weight: 600; font-size: .88rem; }
+
+/* Quiz */
+.quiz-progress { color: var(--muted); font-family: var(--font-mono); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .75rem; }
+.quiz-mock { background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; }
+.quiz-mock-sender { font-family: var(--font-mono); color: var(--muted); font-size: .78rem; margin: 0 0 .5rem; }
+.quiz-mock-body { margin: 0; }
+.quiz-review-item { padding: .7rem 0; border-bottom: 1px solid var(--border); }
+.quiz-review-item.correct p:first-child { color: var(--safe); }
+.quiz-review-item.wrong p:first-child { color: var(--high); }

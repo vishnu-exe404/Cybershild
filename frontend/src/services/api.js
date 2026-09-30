@@ -55,4 +55,15 @@ export const updateUserRequest = (id, payload) =>
   request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const deleteUserRequest = (id) => request(`/admin/users/${id}`, { method: 'DELETE' });
 
+// --- Multi-mode analysis (text / url / upi), console suite ---
+export const analyzeMode = (text, mode) => request('/analyze', { method: 'POST', body: JSON.stringify({ text, mode }) });
+
+// --- Quiz ---
+export const getQuizQuestions = () => request('/quiz/questions');
+export const submitQuiz = (answers) => request('/quiz/submit', { method: 'POST', body: JSON.stringify({ answers }) });
+
+// --- Public real-data feed/stats (no auth required) ---
+export const getPublicFeed = () => request('/public/feed');
+export const getPublicStats = () => request('/public/stats');
+
 export const checkHealth = () => request('/health');

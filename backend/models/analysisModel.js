@@ -68,4 +68,30 @@ async function getStats() {
   };
 }
 
-module.exports = { saveAnalysis, getHistoryForUser, deleteHistoryItem, clearHistory, getStats };
+/**
+ * Public, anonymized "live feed" - most recent checks with only the risk
+ * level, top detected category, and input type. No user identity, no
+ * message content: real data, safe to expose to anyone.
+ */
+async function getRecentPublic(limit = 12) {
+  const rows = await prisma.analysisRecord.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    select: { riskLevel: true, detectedThreats: true, inputType: true, createdAt: true },
+  });
+  return rows.map((r) => ({
+    riskLevel: r.riskLevel,
+    topCategory: Array.isArray(r.detectedThreats) && r.detectedThreats.length ? r.detectedThreats[0] : null,
+    inputType: r.inputType,
+    createdAt: r.createdAt,
+  }));
+}
+
+module.exports = {
+  saveAnalysis,
+  getHistoryForUser,
+  deleteHistoryItem,
+  clearHistory,
+  getStats,
+  getRecentPublic,
+};

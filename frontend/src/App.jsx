@@ -12,6 +12,7 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import AdminLogin from './pages/AdminLogin.jsx';
 import History from './pages/History.jsx';
 import Account from './pages/Account.jsx';
+import Console from './pages/Console.jsx';
 import CyberBackground from './components/CyberBackground.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import UserProtectedRoute from './components/UserProtectedRoute.jsx';
@@ -54,6 +55,14 @@ export default function App() {
             element={
               <UserProtectedRoute>
                 <Account />
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/console"
+            element={
+              <UserProtectedRoute>
+                <Console />
               </UserProtectedRoute>
             }
           />

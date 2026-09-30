@@ -2,6 +2,7 @@ const riskEngine = require('../services/riskEngine');
 const analysisModel = require('../models/analysisModel');
 
 const MAX_INPUT_LENGTH = 5000;
+const VALID_MODES = new Set(['text', 'url', 'upi']);
 
 function detectInputType(text) {
   const trimmed = text.trim();
@@ -11,28 +12,40 @@ function detectInputType(text) {
   return 'message';
 }
 
+/**
+ * mode: 'text' (default) runs the full free-text scam engine; 'url' runs the
+ * dedicated link checker; 'upi' runs the dedicated UPI/phone checker. All
+ * three still go through the same aggregate persistence + history logic.
+ */
 async function analyze(req, res, next) {
   try {
-    const { text } = req.body || {};
+    const { text, mode } = req.body || {};
 
     if (typeof text !== 'string' || text.trim().length === 0) {
-      const err = new Error('Please paste a message, SMS, email, or URL to analyze.');
+      const err = new Error('Please paste a message, SMS, email, URL, or UPI ID to analyze.');
       err.status = 400;
       throw err;
     }
-
     if (text.length > MAX_INPUT_LENGTH) {
       const err = new Error(`Input is too long. Please paste under ${MAX_INPUT_LENGTH} characters.`);
       err.status = 400;
       throw err;
     }
+    const effectiveMode = VALID_MODES.has(mode) ? mode : 'text';
 
-    const result = riskEngine.analyzeText(text);
-    const inputType = detectInputType(text);
+    let result;
+    let inputType;
+    if (effectiveMode === 'url') {
+      result = riskEngine.analyzeUrl(text);
+      inputType = 'url';
+    } else if (effectiveMode === 'upi') {
+      result = riskEngine.analyzeUpi(text);
+      inputType = 'upi';
+    } else {
+      result = riskEngine.analyzeText(text);
+      inputType = detectInputType(text);
+    }
 
-    // Persist only aggregated, non-sensitive fields. If the visitor is
-    // logged in (req.userId set by attachUserIfPresent), the record is
-    // linked to their account so it shows up in their history.
     await analysisModel.saveAnalysis({
       userId: req.userId || null,
       riskScore: result.riskScore,

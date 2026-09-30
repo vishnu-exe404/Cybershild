@@ -29,6 +29,7 @@ export default function Header() {
       <NavLink to="/" end className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.home')}</NavLink>
       {isAuthenticated && (
         <>
+          <NavLink to="/console" className={linkClass} onClick={() => setMobileOpen(false)}>Console</NavLink>
           <NavLink to="/history" className={linkClass} onClick={() => setMobileOpen(false)}>History</NavLink>
           <NavLink to="/account" className={linkClass} onClick={() => setMobileOpen(false)}>Account</NavLink>
         </>

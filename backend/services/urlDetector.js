@@ -36,6 +36,16 @@ const KNOWN_BRANDS = [
   'incometax',
 ];
 
+// Official domains these brands are allowed to appear on (typosquat check
+// below flags the brand name showing up anywhere else).
+const OFFICIAL_BRAND_DOMAINS = [
+  'sbi.co.in', 'onlinesbi.sbi', 'hdfcbank.com', 'icicibank.com', 'axisbank.com',
+  'paytm.com', 'phonepe.com', 'irctc.co.in', 'amazon.in', 'amazon.com',
+  'flipkart.com', 'google.com', 'whatsapp.com', 'indiapost.gov.in', 'incometax.gov.in',
+];
+
+const CREDENTIAL_HARVEST_KEYWORDS = /kyc|update|login|verify|account|claim|reward|free|gift|apk/i;
+
 function extractUrls(text) {
   const matches = text.match(URL_REGEX) || [];
   return matches.map((u) => u.replace(/[.,;:!?)]+$/, '')); // trim trailing punctuation
@@ -60,12 +70,15 @@ function countSubdomains(hostname) {
 
 function looksLikeBrandLookalike(hostname) {
   if (!hostname) return false;
+  // A domain is "official" if it matches (or is a subdomain of) any of the
+  // brand's real registered domains - not just a guessed "<brand>.com".
+  const isOfficial = OFFICIAL_BRAND_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
+  if (isOfficial) return false;
   return KNOWN_BRANDS.some((brand) => {
     const containsBrand = hostname.includes(brand);
-    const isOfficialDomain = hostname === `${brand}.com` || hostname.endsWith(`.${brand}.com`);
-    // Flag when brand name appears but combined with hyphens/extra words
-    // (e.g. "sbi-kyc-update.com") rather than the real domain.
-    return containsBrand && !isOfficialDomain && (hostname.includes('-') || countSubdomains(hostname) > 1);
+    // Flag when the brand name appears on a domain that isn't official,
+    // especially combined with hyphens/extra subdomains (e.g. "sbi-kyc-update.xyz").
+    return containsBrand && (hostname.includes('-') || countSubdomains(hostname) > 1);
   });
 }
 
@@ -133,6 +146,24 @@ function analyze(text) {
         weight: 22,
         reason: `The link (${hostname}) appears to imitate a well-known brand name but is not the official domain.`,
         recommendation: 'Do not enter any details. Go to the brand\'s official app or type their website address manually.',
+      });
+    }
+  }
+
+  for (const rawUrl of urls) {
+    const hostname = getHostname(rawUrl);
+    if (!hostname) continue;
+    const fullPath = hostname + (rawUrl.split(hostname)[1] || '');
+
+    const isOfficial = OFFICIAL_BRAND_DOMAINS.some((d) => hostname === d || hostname.endsWith('.' + d));
+    if (!isOfficial && CREDENTIAL_HARVEST_KEYWORDS.test(fullPath)) {
+      findings.push({
+        id: 'url_credential_harvest_keywords',
+        category: 'Suspicious URL',
+        label: 'Credential-Harvesting Keywords in Link',
+        weight: 14,
+        reason: `The link's address contains words like "verify", "kyc", or "reward" on a domain that is not an official brand site.`,
+        recommendation: 'Links combining urgent account-action wording with an unfamiliar domain are a classic phishing pattern.',
       });
     }
   }

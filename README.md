@@ -32,6 +32,21 @@ Risk Engine (unchanged) ──► Detection Modules ──► Risk Score
   `/history`. Logged-out visitors can still use it; nothing is saved for them beyond the same
   anonymized aggregate stats as before.
 
+## Console (integrated from the CyberGuard concept project)
+
+A new post-login area at **/console**, in the same cyber theme, with real backend behind every tab:
+
+- **Scanner** - one tri-mode checker (Message / Link / UPI-Phone) instead of three separate tools; each mode hits a dedicated, more precise backend analyzer.
+- **Live Feed** - real recent-activity feed and totals from your actual database (anonymized: risk level + top category only, never the message or who submitted it). The radar animation next to it is decorative, same as the matrix-rain background - it is explicitly labeled "not live telemetry" and never presented as real data.
+- **Password Vault** - entropy-based strength check, 100% client-side (a password is never sent anywhere).
+- **Golden Hour** - a real countdown timer (persists across refresh) plus an incident-response checklist and a complaint-draft generator that pulls from your actual last scan result, with one-click copy.
+- **Scam Archives** - a static reference of common India-specific scam patterns.
+- **Quiz** - "Spot the Scam", graded **server-side** against an answer key never sent to the client, so a score can't be faked; every attempt (including anonymous ones) is saved via a new `QuizAttempt` table.
+
+New migration: `20260301000000_add_quiz_attempts` - run `npm run prisma:migrate` again.
+
+**Your existing login page was not touched.** `frontend/src/pages/Login.jsx` is byte-for-byte identical to before this integration (verified by hash).
+
 ## New in this version
 
 - **Redesigned UI**: dark-by-default premium theme with a light mode toggle, glass cards, animated gradient background, responsive header with mobile drawer, and an admin dashboard with a collapsible sidebar. One CSS design system (`frontend/src/styles/global.css`).
@@ -128,6 +143,11 @@ Runs at `http://localhost:5173`.
 | DELETE | `/api/history` | user | Clear your history |
 | POST | `/api/admin/users` | admin | Create a user |
 | GET | `/api/admin/users/:id` | admin | Get one user |
+| POST | `/api/analyze` | optional | Now accepts `mode: 'text' \| 'url' \| 'upi'` (default `text`) |
+| GET | `/api/quiz/questions` | — | "Spot the Scam" questions (answer key withheld) |
+| POST | `/api/quiz/submit` | optional | `{ answers }` - graded **server-side**, attempt saved |
+| GET | `/api/public/feed` | — | Real, anonymized recent-checks feed (no user id, no raw text) |
+| GET | `/api/public/stats` | — | Real aggregate totals (lighter, public version of admin stats) |
 | POST | `/api/auth/forgot-password` | — | Request a reset link (generic response, never reveals if the email exists) |
 | POST | `/api/auth/reset-password` | — | `{ email, token, newPassword }` - token is hashed, single-use, 15 min expiry |
 | GET | `/api/history` | user | The caller's own analysis history |

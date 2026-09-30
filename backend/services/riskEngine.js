@@ -1,4 +1,6 @@
 const phishingDetector = require('./phishingDetector');
+const urlDetector = require('./urlDetector');
+const upiRules = require('../rules/upiRules');
 const scamPatternDetector = require('./scamPatternDetector');
 const keywordDetector = require('./keywordDetector');
 
@@ -88,4 +90,52 @@ function defaultSafeRecommendation() {
   return 'No strong risk signals were found, but always stay cautious with unexpected messages and never share OTPs or passwords.';
 }
 
-module.exports = { analyzeText, RISK_LEVELS };
+/**
+ * URL-focused analysis: same URL detector, but scored/labeled for the
+ * dedicated "Link Checker" tab rather than free-text scanning.
+ */
+function analyzeUrl(rawUrl) {
+  const text = (rawUrl || '').trim();
+  const { urls, findings } = urlDetector.analyze(text);
+
+  const totalWeight = findings.reduce((sum, f) => sum + f.weight, 0);
+  const riskScore = findings.length === 0 ? 0 : weightToScore(totalWeight);
+  const riskLevel = scoreToLevel(riskScore);
+  const sorted = [...findings].sort((a, b) => b.weight - a.weight);
+
+  return {
+    riskScore,
+    riskLevel,
+    detectedThreats: sorted.map((f) => f.label),
+    reasons: sorted.length ? sorted.map((f) => f.reason) : ['No suspicious URL patterns were found.'],
+    recommendations: dedupeStrings(sorted.map((f) => f.recommendation)).length
+      ? dedupeStrings(sorted.map((f) => f.recommendation))
+      : [defaultSafeRecommendation()],
+    urlsFound: urls,
+  };
+}
+
+/**
+ * UPI VPA / phone-number analysis, using the dedicated upiRules module.
+ */
+function analyzeUpi(rawValue) {
+  const text = (rawValue || '').trim();
+  const findings = upiRules.evaluate(text);
+
+  const totalWeight = findings.reduce((sum, f) => sum + f.weight, 0);
+  const riskScore = findings.length === 0 ? 0 : weightToScore(totalWeight);
+  const riskLevel = scoreToLevel(riskScore);
+  const sorted = [...findings].sort((a, b) => b.weight - a.weight);
+
+  return {
+    riskScore,
+    riskLevel,
+    detectedThreats: sorted.map((f) => f.label),
+    reasons: sorted.length ? sorted.map((f) => f.reason) : ['No suspicious patterns were found for this UPI ID / phone number.'],
+    recommendations: dedupeStrings(sorted.map((f) => f.recommendation)).length
+      ? dedupeStrings(sorted.map((f) => f.recommendation))
+      : [defaultSafeRecommendation()],
+  };
+}
+
+module.exports = { analyzeText, analyzeUrl, analyzeUpi, RISK_LEVELS };

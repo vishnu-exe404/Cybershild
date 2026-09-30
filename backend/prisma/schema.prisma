@@ -26,7 +26,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  analyses AnalysisRecord[]
+  analyses     AnalysisRecord[]
+  quizAttempts QuizAttempt[]
 
   @@map("users")
 }
@@ -59,4 +60,18 @@ model AnalysisRecord {
   @@index([userId])
   @@index([createdAt])
   @@map("analysis_records")
+}
+
+/// A completed round of the "Spot the Scam" quiz. Graded server-side (see
+/// quizContent.js) so a client can never submit a fabricated score.
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  score     Int
+  total     Int
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("quiz_attempts")
 }

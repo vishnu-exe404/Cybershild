@@ -10,6 +10,8 @@ const authRoutes = require('./routes/authRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const historyRoutes = require('./routes/historyRoutes');
+const quizRoutes = require('./routes/quizRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const prisma = require('./config/prisma');
 
@@ -78,6 +80,8 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/analyze', analysisRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/history', historyRoutes);
+app.use('/api/quiz', quizRoutes);
+app.use('/api/public', publicRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin', adminRoutes); // user management + /api/admin/stats, all requireAdmin-protected
 
