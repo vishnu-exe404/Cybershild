@@ -143,7 +143,7 @@ Runs at `http://localhost:5173`.
 | DELETE | `/api/history` | user | Clear your history |
 | POST | `/api/admin/users` | admin | Create a user |
 | GET | `/api/admin/users/:id` | admin | Get one user |
-| POST | `/api/analyze` | optional | Now accepts `mode: 'text' \| 'url' \| 'upi'` (default `text`) |
+| POST | `/api/analyze` | optional | Now accepts `mode` set to `text`, `url`, or `upi` (default `text`) |
 | GET | `/api/quiz/questions` | — | "Spot the Scam" questions (answer key withheld) |
 | POST | `/api/quiz/submit` | optional | `{ answers }` - graded **server-side**, attempt saved |
 | GET | `/api/public/feed` | — | Real, anonymized recent-checks feed (no user id, no raw text) |
