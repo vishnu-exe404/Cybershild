@@ -56,7 +56,13 @@ export const updateUserRequest = (id, payload) =>
 export const deleteUserRequest = (id) => request(`/admin/users/${id}`, { method: 'DELETE' });
 
 // --- Multi-mode analysis (text / url / upi), console suite ---
-export const analyzeMode = (text, mode) => request('/analyze', { method: 'POST', body: JSON.stringify({ text, mode }) });
+// Measures real round-trip time for this specific call (performance.now())
+// so the UI can show an honest "last scan: Xms", never a fixed/fake number.
+export async function analyzeMode(text, mode) {
+  const startedAt = performance.now();
+  const result = await request('/analyze', { method: 'POST', body: JSON.stringify({ text, mode }) });
+  return { ...result, _clientLatencyMs: Math.round(performance.now() - startedAt) };
+}
 
 // --- Quiz ---
 export const getQuizQuestions = () => request('/quiz/questions');

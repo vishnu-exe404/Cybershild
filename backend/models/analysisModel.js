@@ -68,6 +68,16 @@ async function getStats() {
   };
 }
 
+/** Real last-24h counts, for the console's "today" hero stat cards. */
+async function getTodayStats() {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [checksToday, highRiskToday] = await Promise.all([
+    prisma.analysisRecord.count({ where: { createdAt: { gte: since } } }),
+    prisma.analysisRecord.count({ where: { createdAt: { gte: since }, riskLevel: 'HIGH_RISK' } }),
+  ]);
+  return { checksToday, highRiskToday };
+}
+
 /**
  * Public, anonymized "live feed" - most recent checks with only the risk
  * level, top detected category, and input type. No user identity, no
@@ -93,5 +103,6 @@ module.exports = {
   deleteHistoryItem,
   clearHistory,
   getStats,
+  getTodayStats,
   getRecentPublic,
 };

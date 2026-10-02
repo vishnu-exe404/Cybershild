@@ -16,15 +16,19 @@ function timeAgo(iso) {
 export default function LiveFeed() {
   const [feed, setFeed] = useState(null);
   const [stats, setStats] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [cleared, setCleared] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     function poll() {
+      if (paused) return;
       Promise.all([getPublicFeed(), getPublicStats()])
         .then(([f, s]) => {
           if (!cancelled) {
             setFeed(f.items);
             setStats(s);
+            setCleared(false);
           }
         })
         .catch(() => {});
@@ -35,7 +39,9 @@ export default function LiveFeed() {
       cancelled = true;
       clearInterval(id);
     };
-  }, []);
+  }, [paused]);
+
+  const visibleFeed = cleared ? [] : feed;
 
   return (
     <div className="feed-layout">
@@ -59,13 +65,21 @@ export default function LiveFeed() {
       </div>
 
       <div className="card glass-card feed-list-card">
-        <h3 style={{ marginTop: 0 }}>Recent checks</h3>
-        <p className="muted" style={{ marginTop: '-.5rem' }}>Real, anonymized results from everyone using CyberShild - no identities, no message content.</p>
-        {!feed && <SkeletonLine width="100%" />}
-        {feed && feed.length === 0 && <p className="empty-state">No checks yet.</p>}
-        {feed && feed.length > 0 && (
+        <div className="table-toolbar">
+          <div>
+            <h3 style={{ margin: 0 }}>Recent checks</h3>
+            <p className="muted" style={{ margin: '.2rem 0 0' }}>Real, anonymized results from everyone using CyberShild - no identities, no message content.</p>
+          </div>
+          <div>
+            <button type="button" className="btn-outline btn-sm" onClick={() => setPaused((p) => !p)}>{paused ? '▶ Resume' : '⏸ Pause'}</button>
+            <button type="button" className="btn-outline btn-sm" style={{ marginRight: 0 }} onClick={() => setCleared(true)}>Clear</button>
+          </div>
+        </div>
+        {!visibleFeed && <SkeletonLine width="100%" />}
+        {visibleFeed && visibleFeed.length === 0 && <p className="empty-state">{cleared ? 'Cleared. Click Resume/refresh to see new checks.' : 'No checks yet.'}</p>}
+        {visibleFeed && visibleFeed.length > 0 && (
           <ul className="feed-list">
-            {feed.map((item, i) => (
+            {visibleFeed.map((item, i) => (
               <li key={i} className="feed-item">
                 <span className={`badge ${LEVEL_CLASS[item.riskLevel] || 'badge-caution'}`}>{item.riskLevel.replace('_', ' ')}</span>
                 <span className="feed-item-cat">{item.topCategory || 'No specific threat'}</span>

@@ -515,3 +515,36 @@ input:focus, textarea:focus, select:focus { border-color: var(--c1); box-shadow:
 .quiz-review-item { padding: .7rem 0; border-bottom: 1px solid var(--border); }
 .quiz-review-item.correct p:first-child { color: var(--safe); }
 .quiz-review-item.wrong p:first-child { color: var(--high); }
+
+/* =====================================================================
+   Ticker bar, hero stats, SOC badge (reference-UI match)
+   ===================================================================== */
+.ticker-bar {
+  display: flex; align-items: center; gap: .5rem .7rem; flex-wrap: wrap;
+  background: var(--glass-strong); border: 1px solid var(--border); border-radius: 16px;
+  padding: .6rem 1.1rem; margin-bottom: 1.1rem; font-size: .8rem; font-family: var(--font-mono); line-height: 1.5;
+}
+.ticker-item, .ticker-hotline { white-space: normal; }
+.ticker-live-dot { display: inline-flex; align-items: center; gap: .35rem; color: var(--high); font-weight: 700; flex-shrink: 0; }
+.ticker-live-dot .status-dot { background: var(--high); box-shadow: 0 0 8px var(--high); animation: pulse 2s infinite; }
+.ticker-item { color: var(--muted); flex-shrink: 0; }
+.ticker-sep { color: var(--border); flex-shrink: 0; }
+.ticker-hotline { color: var(--caution); flex-shrink: 0; }
+
+.hero-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+.hero-stat-card { padding: 1.1rem 1.2rem; }
+.hero-stat-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: .72rem; letter-spacing: .06em; font-family: var(--font-mono); margin-bottom: .6rem; }
+.hero-stat-value { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; color: var(--c1); text-shadow: 0 0 16px color-mix(in srgb, var(--c1) 40%, transparent); }
+.hero-stat-value.hero-stat-high { color: var(--high); text-shadow: 0 0 16px color-mix(in srgb, var(--high) 40%, transparent); }
+.hero-stat-value.hero-stat-level { color: var(--caution); font-size: 1.3rem; text-shadow: 0 0 16px color-mix(in srgb, var(--caution) 40%, transparent); }
+.hero-stat-caption { font-size: .74rem; margin: .3rem 0 0; }
+@media (max-width: 860px) { .hero-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.console-header-right { display: flex; align-items: center; gap: .6rem; }
+.soc-badge-row { display: flex; align-items: center; gap: .5rem; }
+.soc-badge { display: flex; align-items: center; gap: .55rem; background: var(--glass); border: 1px solid var(--border); border-radius: 999px; padding: .4rem .5rem .4rem .8rem; }
+.soc-badge-text { display: flex; flex-direction: column; line-height: 1.15; font-size: .72rem; color: var(--muted); }
+.soc-badge-text strong { color: var(--text); font-size: .85rem; }
+.soc-badge-end { background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.soc-badge-end:hover { color: var(--high); background: var(--high-bg); }
+@media (max-width: 640px) { .hero-stats-grid { grid-template-columns: 1fr 1fr; } .soc-badge-text { display: none; } }

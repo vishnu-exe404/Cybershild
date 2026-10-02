@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
 import { analyzeMode } from '../../services/api.js';
+import { playScanResultSound } from '../../utils/sound.js';
 import RiskScore from '../RiskScore.jsx';
 import DetectionResults from '../DetectionResults.jsx';
 import ActionGuidance from '../ActionGuidance.jsx';
 
-const MODES = [
+const ALL_MODES = [
   { key: 'text', label: 'Message / SMS', placeholder: 'e.g. "Your electricity will be disconnected tonight at 9:30 PM. Call 9876543210 immediately."' },
-  { key: 'url', label: 'Link', placeholder: 'e.g. http://sbi-kyc-verify-update.xyz/login' },
   { key: 'upi', label: 'UPI ID / Phone', placeholder: 'e.g. refund.officer@oksbi or +91 98765 43210' },
+  { key: 'url', label: 'Link', placeholder: 'e.g. http://sbi-kyc-verify-update.xyz/login' },
 ];
 
-export default function ScannerSuite({ onResult }) {
-  const [mode, setMode] = useState('text');
+/**
+ * @param allowedModes  which mode tabs to show - e.g. ['text','upi'] for a
+ *                       "Scam & SMS Scanner" tab, or ['url'] for a dedicated
+ *                       "URL Hunter" tab. Defaults to all three.
+ * @param initialMode    which mode is selected first.
+ * @param onResult       (result, rawInput, mode) - called after a real scan.
+ */
+export default function ScannerSuite({ allowedModes, initialMode, onResult }) {
+  const modes = ALL_MODES.filter((m) => !allowedModes || allowedModes.includes(m.key));
+  const [mode, setMode] = useState(initialMode || modes[0].key);
   const [value, setValue] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const active = MODES.find((m) => m.key === mode);
+  const active = modes.find((m) => m.key === mode) || modes[0];
 
   async function handleAnalyze() {
     if (!value.trim()) {
@@ -29,6 +38,7 @@ export default function ScannerSuite({ onResult }) {
     try {
       const r = await analyzeMode(value, mode);
       setResult(r);
+      playScanResultSound(r.riskLevel);
       onResult?.(r, value, mode);
     } catch (err) {
       setError(err.message);
@@ -45,13 +55,15 @@ export default function ScannerSuite({ onResult }) {
 
   return (
     <div className="scanner-suite">
-      <div className="mode-tabs" role="tablist">
-        {MODES.map((m) => (
-          <button key={m.key} type="button" role="tab" aria-selected={mode === m.key} className={mode === m.key ? 'mode-tab active' : 'mode-tab'} onClick={() => switchMode(m.key)}>
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {modes.length > 1 && (
+        <div className="mode-tabs" role="tablist">
+          {modes.map((m) => (
+            <button key={m.key} type="button" role="tab" aria-selected={mode === m.key} className={mode === m.key ? 'mode-tab active' : 'mode-tab'} onClick={() => switchMode(m.key)}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={`card glass-card analyze-card ${loading ? 'scanning' : ''}`}>
         <label className="message-input-label" htmlFor="suite-input">
