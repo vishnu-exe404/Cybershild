@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
+import Splash from './pages/Splash.jsx';
 import Results from './pages/Results.jsx';
 import About from './pages/About.jsx';
 import Register from './pages/Register.jsx';
@@ -27,14 +28,18 @@ export default function App() {
   // The admin dashboard owns its own sidebar layout/padding, so give it
   // the full width instead of the marketing-page max-width + padding.
   const isDashboard = location.pathname.startsWith('/dashboard');
+  const isHome = location.pathname === '/home';
+  const isSplash = location.pathname === '/';
+
+  if (isSplash) return <Splash />;
 
   return (
     <div className="app-shell">
       <CyberBackground />
       <Header />
-      <main className={isDashboard ? 'app-main app-main--flush' : 'app-main'}>
+      <main className={isDashboard || isHome ? 'app-main app-main--flush' : 'app-main'}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/results" element={<Results />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<Register />} />

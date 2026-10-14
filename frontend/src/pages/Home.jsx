@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../services/i18n.jsx';
 import { analyzeMessage } from '../services/api.js';
-import BlobField from '../components/BlobField.jsx';
+import { OrnamentDivider } from '../components/Logo.jsx';
 import MessageInput from '../components/MessageInput.jsx';
 import AnalyzeButton from '../components/AnalyzeButton.jsx';
-import TypeText from '../components/TypeText.jsx';
 
 const SAMPLES = [
   {
@@ -47,39 +46,98 @@ export default function Home() {
     }
   }
 
+  function scrollToChecker() {
+    const el = document.getElementById('checker');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   return (
     <section className="home-page">
-      <BlobField />
-      <div className="hero fade-in">
-        <p className="hero-kicker">&gt; THREAT SCANNER // ONLINE</p>
-        <h1 className="glitch" data-text="Know if it's a scam before you act on it.">Know if it's a scam before you act on it.</h1>
-        <p className="hero-tagline"><TypeText text={t('tagline')} /></p>
+      <div className="landing-hero">
+        <div className="landing-hero-temples" aria-hidden="true" />
+        <div className="landing-hero-inner">
+          <div className="landing-hero-copy fade-in">
+            <p className="hero-kicker">{t('slogan')}</p>
+            <h1>Your Security <span className="gold-text">Our Priority</span></h1>
+            <p className="hero-motto">{t('motto')}</p>
+            <p className="hero-tagline">
+              CyberShild checks suspicious SMS, emails, messages and links for phishing, OTP theft,
+              digital-arrest, courier and malicious-app scams — and tells you what to do next.
+            </p>
+            <div className="hero-cta">
+              <button type="button" className="btn btn-saffron" onClick={scrollToChecker}>Get Started</button>
+              <Link to="/about" className="btn-ghost">Learn More</Link>
+            </div>
+          </div>
+          <div className="landing-hero-art" aria-hidden="true">
+            <span className="hero-mandala" />
+            <img src="/logo/cybershild-mark.svg" alt="" className="hero-shield logo-glow" width="300" height="330" />
+          </div>
+        </div>
       </div>
 
-      <div className={`analyze-card glass-card card-in ${loading ? 'scanning' : ''}`}>
-        <MessageInput value={text} onChange={setText} error={error} />
-        <div className="analyze-actions">
-          <AnalyzeButton onClick={handleAnalyze} loading={loading} disabled={!text.trim()} />
-          {text && (
-            <button type="button" className="btn-outline" onClick={() => setText('')}>
-              {t('input.clear')}
-            </button>
+      <div className="home-container">
+        <div className="feature-grid">
+          <article className="feature-card card-in">
+            <span className="feature-icon" aria-hidden="true">🛡️</span>
+            <h3>Scam Message Scanning</h3>
+            <p>Paste any SMS, email or chat message and get an instant risk score with the reasons behind it.</p>
+          </article>
+          <article className="feature-card card-in">
+            <span className="feature-icon" aria-hidden="true">📱</span>
+            <h3>Malicious App Detection</h3>
+            <p>Flags messages pushing .apk installs, remote-access apps and fake refund apps outside the Play Store.</p>
+          </article>
+          <article className="feature-card card-in">
+            <span className="feature-icon" aria-hidden="true">🔗</span>
+            <h3>Link &amp; URL Analysis</h3>
+            <p>Spots look-alike banking domains, shortened links and other phishing tricks before you click.</p>
+          </article>
+          <article className="feature-card card-in">
+            <span className="feature-icon" aria-hidden="true">🔒</span>
+            <h3>Privacy First</h3>
+            <p>Your message content is not stored — only anonymous risk statistics are kept.</p>
+          </article>
+        </div>
+
+        <OrnamentDivider />
+
+        <div id="checker" className="checker-heading">
+          <h2>Check a message now</h2>
+          <p className="muted">Paste the suspicious text or link below.</p>
+        </div>
+
+        <div className={`analyze-card glass-card card-in ${loading ? 'scanning' : ''}`}>
+          <MessageInput value={text} onChange={setText} error={error} />
+          <div className="analyze-actions">
+            <AnalyzeButton onClick={handleAnalyze} loading={loading} disabled={!text.trim()} />
+            {text && (
+              <button type="button" className="btn-outline" onClick={() => setText('')}>
+                {t('input.clear')}
+              </button>
+            )}
+          </div>
+          {loading && (
+            <div className="scan-loader" role="status" aria-live="polite">
+              <span className="scan-loader-lotus" aria-hidden="true" />
+              <span>Scanning for scam patterns…</span>
+            </div>
           )}
+          <div className="sample-chips">
+            {SAMPLES.map((s) => (
+              <button key={s.label} type="button" className="sample-chip" onClick={() => setText(s.text)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="sample-chips">
-          {SAMPLES.map((s) => (
-            <button key={s.label} type="button" className="sample-chip" onClick={() => setText(s.text)}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <div className="how-it-works">
-        <div className="step card"><span className="step-number">1</span><p>Paste & Submit</p></div>
-        <div className="step card"><span className="step-number">2</span><p>Engine Analyzes</p></div>
-        <div className="step card"><span className="step-number">3</span><p>Instant Risk Score</p></div>
-        <div className="step card"><span className="step-number">4</span><p>Guided Action</p></div>
+        <div className="how-it-works">
+          <div className="step card"><span className="step-number">1</span><p>Paste &amp; Submit</p></div>
+          <div className="step card"><span className="step-number">2</span><p>Engine Analyzes</p></div>
+          <div className="step card"><span className="step-number">3</span><p>Instant Risk Score</p></div>
+          <div className="step card"><span className="step-number">4</span><p>Guided Action</p></div>
+        </div>
       </div>
     </section>
   );

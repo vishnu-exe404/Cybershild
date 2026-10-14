@@ -13,7 +13,7 @@ export default function Results() {
   if (!result) {
     // Direct navigation without an analysis - send back to Home instead of
     // showing a fake/empty result.
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   const { riskScore, riskLevel, detectedThreats, reasons, recommendations, disclaimer } = result;
@@ -25,7 +25,7 @@ export default function Results() {
         <DetectionResults threats={detectedThreats} reasons={reasons} />
         <ActionGuidance recommendations={recommendations} riskLevel={riskLevel} />
         <p className="disclaimer">{disclaimer || t('result.disclaimer')}</p>
-        <Link to="/" className="analyze-another-link">
+        <Link to="/home" className="analyze-another-link">
           ← {t('input.analyze')}
         </Link>
       </div>

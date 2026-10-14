@@ -205,3 +205,9 @@ the exact message and I'll fix it.
 
 Detection rules are unchanged from before - see `backend/rules/*.js`. Add a new pattern by
 adding an entry to the relevant file's `RULES` array.
+
+## Indian heritage redesign (frontend)
+Visual layer only: navy / saffron / gold / ivory / green palette, new shield-padlock-lotus logo
+(`public/logo/cybershild-mark.svg`), ornaments in `public/ornaments/`, theme in `src/styles/global.css`
+(light = cream default, dark = navy via the existing toggle). Routes, API calls and auth are unchanged.
+# cpmain

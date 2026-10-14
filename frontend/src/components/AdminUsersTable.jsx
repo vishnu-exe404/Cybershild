@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listUsersRequest, updateUserRequest, deleteUserRequest, createUserRequest } from '../services/api.js';
+import { listUsersRequest, updateUserRequest, deleteUserRequest, createUserRequest, resetUserPasswordRequest } from '../services/api.js';
 import { useToast } from '../services/toast.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { SkeletonTableRows } from './Skeleton.jsx';
@@ -18,6 +18,10 @@ export default function AdminUsersTable() {
   const [createForm, setCreateForm] = useState({ name: '', email: '', username: '', password: '' });
   const [createErrors, setCreateErrors] = useState({});
   const [createError, setCreateError] = useState('');
+  const [resetUser, setResetUser] = useState(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
 
   function load() {
     setLoading(true);
@@ -67,6 +71,28 @@ export default function AdminUsersTable() {
     } catch (err) {
       setCreateError(err.message);
       if (err.fieldErrors) setCreateErrors(err.fieldErrors);
+    }
+  }
+
+  function openReset(user) {
+    setResetUser(user);
+    setResetPassword('');
+    setResetError('');
+    setTempPassword('');
+  }
+
+  async function submitReset() {
+    setResetError('');
+    try {
+      const res = await resetUserPasswordRequest(resetUser.id, resetPassword.trim());
+      if (res.temporaryPassword) {
+        setTempPassword(res.temporaryPassword);
+      } else {
+        showToast(`Password updated for ${resetUser.username}.`, 'success');
+        setResetUser(null);
+      }
+    } catch (err) {
+      setResetError(err.message);
     }
   }
 
@@ -121,6 +147,7 @@ export default function AdminUsersTable() {
                   <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td>
                     <button className="btn-outline btn-sm" onClick={() => openEdit(u)}>Edit</button>
+                    <button className="btn-outline btn-sm" onClick={() => openReset(u)}>Reset password</button>
                     <button className="btn-outline btn-sm btn-danger-outline" onClick={() => setDeletingUser(u)}>Delete</button>
                   </td>
                 </tr>
@@ -177,6 +204,36 @@ export default function AdminUsersTable() {
               <button className="btn-outline" onClick={() => setCreating(false)}>Cancel</button>
               <button className="btn" onClick={submitCreate}>Create</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {resetUser && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Reset password">
+          <div className="modal-card">
+            <h3>Reset password</h3>
+            <p className="muted">Account: <strong>{resetUser.username}</strong> ({resetUser.email}). Existing passwords can never be viewed - set a new one instead.</p>
+            {!tempPassword ? (
+              <>
+                <label>New password (leave blank to generate a temporary one)</label>
+                <input type="text" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} autoComplete="off" placeholder="min 8 characters" />
+                {resetError && <p className="field-error" role="alert">{resetError}</p>}
+                <div className="modal-actions">
+                  <button className="btn-outline" onClick={() => setResetUser(null)}>Cancel</button>
+                  <button className="btn" onClick={submitReset}>{resetPassword.trim() ? 'Set password' : 'Generate temporary password'}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Temporary password (shown only once - copy it now and share it securely with the user):</p>
+                <input readOnly value={tempPassword} onFocus={(e) => e.target.select()} style={{ fontFamily: 'monospace', fontWeight: 700 }} />
+                <p className="muted">Ask the user to log in and change it from their account settings.</p>
+                <div className="modal-actions">
+                  <button className="btn-outline" onClick={() => navigator.clipboard?.writeText(tempPassword).then(() => showToast('Copied.', 'success'))}>Copy</button>
+                  <button className="btn" onClick={() => { setTempPassword(''); setResetUser(null); }}>Done</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

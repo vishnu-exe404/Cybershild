@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" fill="currentColor">
+  <!-- gopuram left -->
+  <path d="M60 220V150h20v-14h16v-14h14v-14h12v-14h8v-12h-4v-6h10v6h-4v12h8v14h12v14h14v14h16v14h20v70z"/>
+  <!-- shikhara temple -->
+  <path d="M260 220v-60h40v-20h30v-24h24v-26h18v-24h10v-14h4v-14h4v14h4v14h10v24h18v26h24v24h30v20h40v60z"/>
+  <!-- dome + minarets -->
+  <path d="M520 220v-80c0-30 24-52 52-60 28 8 52 30 52 60v80z"/><rect x="505" y="100" width="10" height="120"/><rect x="629" y="100" width="10" height="120"/>
+  <circle cx="572" cy="68" r="5"/><rect x="570" y="52" width="4" height="16"/>
+  <!-- india-gate style arch -->
+  <path d="M700 220V120h110v100h-30v-70a25 25 0 0 0-50 0v70z"/>
+  <rect x="696" y="112" width="118" height="10"/>
+  <!-- gopuram right -->
+  <path d="M880 220v-70h24v-14h20v-14h16v-14h14v-14h10v-12h-4v-6h12v6h-4v12h10v14h14v14h16v14h20v14h24v70z"/>
+  <!-- domes far right -->
+  <path d="M1080 220v-50c0-20 14-34 32-40 18 6 32 20 32 40v50z"/><path d="M1130 220v-36c0-14 10-24 22-28 12 4 22 14 22 28v36z"/>
+  <rect x="0" y="206" width="1200" height="14"/>
+</svg>

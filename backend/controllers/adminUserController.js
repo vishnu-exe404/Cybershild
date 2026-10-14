@@ -1,5 +1,6 @@
 const userModel = require('../models/userModel');
-const { validateRegistration, validateProfileFields } = require('../utils/validate');
+const crypto = require('crypto');
+const { validateRegistration, validateProfileFields, validateNewPassword } = require('../utils/validate');
 
 function conflictMessage(err) {
   const target = err.meta?.target;
@@ -74,4 +75,35 @@ async function deleteUser(req, res, next) {
   }
 }
 
-module.exports = { listUsers, getUser, createUser, updateUser, deleteUser };
+/**
+ * Admin password reset for a locked-out / forgetful user.
+ * Passwords are stored only as bcrypt hashes, so an admin can never READ a
+ * password - instead the admin sets a new one (or lets the server generate a
+ * temporary one). A generated password is returned once in this response and
+ * is never stored in readable form or logged.
+ */
+async function resetUserPassword(req, res, next) {
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    let password = req.body && req.body.password;
+    let generated = false;
+    if (password === undefined || password === null || password === '') {
+      // 12 chars from an unambiguous alphabet, cryptographically random.
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+      password = Array.from(crypto.randomBytes(12), (b) => alphabet[b % alphabet.length]).join('') + '#7';
+      generated = true;
+    } else {
+      const msg = validateNewPassword(password);
+      if (msg) return res.status(400).json({ error: msg });
+    }
+
+    await userModel.setPassword(user.id, password);
+    res.json({ ok: true, ...(generated ? { temporaryPassword: password } : {}) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { listUsers, getUser, createUser, updateUser, deleteUser, resetUserPassword };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPasswordRequest } from '../services/api.js';
 import { useToast } from '../services/toast.jsx';
+import { AuthBrand } from '../components/Logo.jsx';
 import BlobField from '../components/BlobField.jsx';
 import { PasswordInput } from '../components/FormField.jsx';
 import { IconLock, IconShield } from '../components/icons.jsx';
@@ -47,7 +48,7 @@ export default function ResetPassword() {
     <section className="auth-page">
       <BlobField />
       <div className="auth-card glass-card card-in">
-        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild</div>
+        <AuthBrand />
 
         {!linkLooksValid ? (
           <>

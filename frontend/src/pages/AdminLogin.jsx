@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../services/adminAuth.jsx';
 import { useToast } from '../services/toast.jsx';
+import { AuthBrand } from '../components/Logo.jsx';
 import BlobField from '../components/BlobField.jsx';
 import { IconInput, PasswordInput } from '../components/FormField.jsx';
 import { IconUser, IconLock, IconShield } from '../components/icons.jsx';
@@ -44,7 +45,7 @@ export default function AdminLogin() {
     <section className="auth-page">
       <BlobField />
       <form className={`auth-card glass-card card-in admin-login-card ${shake ? 'shake' : ''}`} onSubmit={handleSubmit} onAnimationEnd={() => setShake(false)}>
-        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild Admin</div>
+        <AuthBrand label="CyberShild Admin" />
         <h1>Admin login</h1>
         <p className="sub">Restricted area - separate from regular user accounts.</p>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useUserAuth } from '../services/userAuth.jsx';
 import { useToast } from '../services/toast.jsx';
+import { AuthBrand } from '../components/Logo.jsx';
 import BlobField from '../components/BlobField.jsx';
 import { IconInput, PasswordInput } from '../components/FormField.jsx';
 import { IconMail, IconLock, IconShield } from '../components/icons.jsx';
@@ -11,7 +12,7 @@ export default function Login() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from?.pathname || '/';
+  const redirectTo = location.state?.from?.pathname || '/console';
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +46,7 @@ export default function Login() {
     <section className="auth-page">
       <BlobField />
       <form className={`auth-card glass-card card-in ${shake ? 'shake' : ''}`} onSubmit={handleSubmit} onAnimationEnd={() => setShake(false)}>
-        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild</div>
+        <AuthBrand />
         <h1>Welcome back</h1>
         <p className="sub">Log in to access your saved check history.</p>
 

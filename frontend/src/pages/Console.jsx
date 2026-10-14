@@ -11,7 +11,7 @@ import QuizGame from '../components/console/QuizGame.jsx';
 import StatusPill from '../components/StatusPill.jsx';
 
 const TABS = [
-  { key: 'feed', label: 'Live SOC & Radar' },
+  { key: 'feed', label: 'Live Activity' },
   { key: 'scanner', label: 'Scam & SMS Scanner' },
   { key: 'urlhunter', label: 'URL Hunter' },
   { key: 'vault', label: 'Password Vault' },

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUserAuth } from '../services/userAuth.jsx';
 import { useToast } from '../services/toast.jsx';
+import { AuthBrand } from '../components/Logo.jsx';
 import BlobField from '../components/BlobField.jsx';
 import { IconInput, PasswordInput } from '../components/FormField.jsx';
 import { IconMail, IconLock, IconUser, IconShield } from '../components/icons.jsx';
@@ -29,7 +30,7 @@ export default function Register() {
     try {
       await register(form);
       showToast('Account created - welcome!', 'success');
-      navigate('/', { replace: true });
+      navigate('/console', { replace: true });
     } catch (err) {
       setError(err.message);
       if (err.fieldErrors) setFieldErrors(err.fieldErrors);
@@ -43,7 +44,7 @@ export default function Register() {
     <section className="auth-page">
       <BlobField />
       <form className={`auth-card glass-card card-in ${shake ? 'shake' : ''}`} onSubmit={handleSubmit} onAnimationEnd={() => setShake(false)}>
-        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild</div>
+        <AuthBrand />
         <h1>Create your account</h1>
         <p className="sub">Save your check history and unlock your dashboard.</p>
 

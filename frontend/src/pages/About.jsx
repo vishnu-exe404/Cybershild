@@ -6,7 +6,8 @@ export default function About() {
 
   return (
     <section className="fade-in">
-      <div className="card">
+      <div className="card about-card">
+        <p className="hero-kicker">{t('slogan')}</p>
         <h1 style={{ marginTop: 0 }}>{t('about.title')}</h1>
         <p>
           CyberShild is a free tool that helps anyone quickly check

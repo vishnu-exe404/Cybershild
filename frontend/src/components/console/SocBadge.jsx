@@ -21,7 +21,7 @@ export default function SocBadge() {
   async function endSession() {
     await logout();
     showToast('Session ended.', 'info');
-    navigate('/');
+    navigate('/login');
   }
 
   return (

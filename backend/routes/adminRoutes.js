@@ -1,5 +1,5 @@
 const express = require('express');
-const { listUsers, getUser, createUser, updateUser, deleteUser } = require('../controllers/adminUserController');
+const { listUsers, getUser, createUser, updateUser, deleteUser, resetUserPassword } = require('../controllers/adminUserController');
 const { getAnalytics } = require('../controllers/analyticsController');
 const { requireAdmin } = require('../middleware/requireAdmin');
 
@@ -13,6 +13,7 @@ router.post('/users', createUser);
 router.get('/users/:id', getUser);
 router.patch('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+router.post('/users/:id/reset-password', resetUserPassword);
 
 router.get('/stats', getAnalytics);
 

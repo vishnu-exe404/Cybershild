@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { getPublicFeed, getPublicStats } from '../../services/api.js';
-import RadarCanvas from './RadarCanvas.jsx';
 import { SkeletonLine } from '../Skeleton.jsx';
 
 const LEVEL_CLASS = { SAFE: 'badge-safe', CAUTION: 'badge-caution', HIGH_RISK: 'badge-high' };
@@ -45,11 +44,6 @@ export default function LiveFeed() {
 
   return (
     <div className="feed-layout">
-      <div className="card glass-card feed-radar-card">
-        <RadarCanvas />
-        <p className="muted feed-radar-caption">Ambient visual - not live telemetry</p>
-      </div>
-
       <div className="card glass-card feed-stats-card">
         <h3 style={{ marginTop: 0 }}>Platform activity</h3>
         {!stats ? (

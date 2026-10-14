@@ -53,6 +53,8 @@ export const listUsersRequest = (params = {}) => {
 export const createUserRequest = (payload) => request('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
 export const updateUserRequest = (id, payload) =>
   request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const resetUserPasswordRequest = (id, password) =>
+  request(`/admin/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify(password ? { password } : {}) });
 export const deleteUserRequest = (id) => request(`/admin/users/${id}`, { method: 'DELETE' });
 
 // --- Multi-mode analysis (text / url / upi), console suite ---

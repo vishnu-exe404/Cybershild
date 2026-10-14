@@ -46,5 +46,7 @@
   "dashboard.empty": "No checks have been performed yet.",
   "about.title": "About This Platform",
   "footer.text": "This tool provides an automated risk assessment and does not guarantee perfect detection. When in doubt, verify through official channels.",
-  "language.label": "Language"
+  "language.label": "Language",
+  "slogan": "सुरक्षित डिजिटल भारत",
+  "motto": "SCAN • ANALYZE • STAY SAFE"
 }

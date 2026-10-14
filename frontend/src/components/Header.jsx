@@ -7,6 +7,7 @@ import LanguageSelector from './LanguageSelector.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import StatusPill from './StatusPill.jsx';
 import { IconMenu, IconClose } from './icons.jsx';
+import Logo from './Logo.jsx';
 
 export default function Header() {
   const { t } = useLanguage();
@@ -19,14 +20,14 @@ export default function Header() {
     await logout();
     showToast('Logged out.', 'info');
     setMobileOpen(false);
-    navigate('/');
+    navigate('/login');
   }
 
   const linkClass = ({ isActive }) => (isActive ? 'nav-link active' : 'nav-link');
 
   const navLinks = (
     <>
-      <NavLink to="/" end className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.home')}</NavLink>
+      <NavLink to="/home" end className={linkClass} onClick={() => setMobileOpen(false)}>{t('nav.home')}</NavLink>
       {isAuthenticated && (
         <>
           <NavLink to="/console" className={linkClass} onClick={() => setMobileOpen(false)}>Console</NavLink>
@@ -52,9 +53,8 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <Link to="/" className="brand">
-          <img src="/logo/cybershild-mark.svg" alt="" className="brand-logo" width="28" height="28" aria-hidden="true" />
-          <span className="brand-name">{t('appName')}</span>
+        <Link to={isAuthenticated ? '/console' : '/login'} className="brand" aria-label="CyberShild home">
+          <Logo size={34} />
         </Link>
 
         <nav className="nav" aria-label="Main navigation">{navLinks}</nav>

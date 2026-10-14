@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('cybershild_theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('cybershild_theme') || 'light');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

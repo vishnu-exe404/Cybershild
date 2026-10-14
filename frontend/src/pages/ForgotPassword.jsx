@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { forgotPasswordRequest } from '../services/api.js';
+import { AuthBrand } from '../components/Logo.jsx';
 import BlobField from '../components/BlobField.jsx';
 import { IconInput } from '../components/FormField.jsx';
 import { IconMail, IconShield } from '../components/icons.jsx';
@@ -33,7 +34,7 @@ export default function ForgotPassword() {
     <section className="auth-page">
       <BlobField />
       <div className="auth-card glass-card card-in">
-        <div className="brand-mini"><IconShield width={16} height={16} /> CyberShild</div>
+        <AuthBrand />
 
         {!sent ? (
           <form onSubmit={handleSubmit}>
